@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Agregar Sistema - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/paint-roller.png') }}"
+            class="icon-lg icon-align-middle mr-sm">
+        Agregar Sistema
+    </h1>
+    <p class="dashboard-subtitle">
+        Al proyecto: <strong>{{ proyecto.codigo }} - {{ proyecto.cliente_nombre }}</strong>
+    </p>
+</div>
+
+<div class="card card-form">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('sistemas.crear_sistema', proyecto_id=proyecto.id) }}">
+
+            <div class="form-grid">
+                <!-- Sistema a seleccionar -->
+                <div class="div-form-group col-full">
+                    <label class="label-required">Seleccione el Sistema *</label>
+                    <select class="input-text" name="sistema_codigo" required>
+                        <option value="">-- Selecciona --</option>
+                        {% for s in sistemas_disponibles %}
+                        <option value="{{ s.codigo }}">{{ s.sistema }} ({{ s.codigo }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Precio por M2 Inicial ($) *</label>
+                    <input class="input-text numeric-input" type="number" step="0.01" min="0" name="monto_inicial"
+                        id="monto_inicial" required value="0">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Metros Cuadrados Iniciales *</label>
+                    <input class="input-text numeric-input" type="number" step="0.01" min="0"
+                        name="metros_cuadrados_iniciales" id="metros_cuadrados_iniciales" required value="0">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Monto Total del Servicio ($)</label>
+                    <input class="input-text bg-secondary font-600" type="text" id="costo_servicio_m2_inicial" readonly
+                        value="$0.00"
+                        title="Calculado: Precio por M2 * Metros">
+                    <small class="text-gray-500">Calculado automáticamente</small>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Hombres por Día Iniciales *</label>
+                    <input class="input-text" type="number" min="0" name="hombres_por_dia_iniciales" required value="0">
+                </div>
+
+                <div class="div-form-group col-full">
+                    <label>Costo de Producto Terminado Inicial ($)</label>
+                    <input class="input-text numeric-input" type="number" step="0.01" min="0" name="producto_terminado_inicial" value="0">
+                </div>
+
+                <div class="div-form-group col-full">
+                    <label class="label-required">Estado Inicial *</label>
+                    <select class="input-text" name="estado" required>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="activo">Activo</option>
+                        <option value="completado">Completado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions mt-lg">
+                <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}"
+                        class="icon-sm mr-xs">
+                    Guardar Sistema
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const montoInput = document.getElementById('monto_inicial');
+        const metrosInput = document.getElementById('metros_cuadrados_iniciales');
+        const costoDisplay = document.getElementById('costo_servicio_m2_inicial');
+
+        function calcularCosto() {
+            const monto = parseFloat(montoInput.value) || 0;
+            const metros = parseFloat(metrosInput.value) || 0;
+            // Formula solicitada: Monto * m2
+            const costo = monto * metros;
+            costoDisplay.value = '$' + costo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        montoInput.addEventListener('input', calcularCosto);
+        metrosInput.addEventListener('input', calcularCosto);
+    });
+</script>
+{% endblock %}

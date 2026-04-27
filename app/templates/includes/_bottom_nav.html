@@ -1,0 +1,62 @@
+<nav class="bottom-nav">
+    {% set settings_active = current_user.rol != 'agente' and (
+        ('pintores' in request.path and 'sistemas' not in request.path) or
+        ('materiales' in request.path and 'sistemas' not in request.path) or
+        ('usuarios' in request.path and 'dashboard' not in request.path)
+    ) %}
+    <div class="bottom-nav-container">
+        <a href="{{ url_for('usuarios.dashboard_administrador' if current_user.rol == 'administrador' else 'usuarios.dashboard_agente') }}"
+            class="bottom-nav-item {{ 'active' if 'dashboard' in request.path }}">
+            <span class="bottom-nav-icon">
+                <img src="{{ url_for('static', filename='img/icons/hogar.png') }}" alt="Menú" class="icon-lg">
+            </span>
+            <span class="bottom-nav-label">Menú</span>
+        </a>
+
+        <a href="{{ url_for('proyectos.mis_proyectos') }}"
+            class="bottom-nav-item {{ 'active' if 'proyectos' in request.path or 'sistemas' in request.path }}">
+            <span class="bottom-nav-icon">
+                <img src="{{ url_for('static', filename='img/icons/aplicaciones.png') }}" alt="Proyectos" class="icon-lg">
+            </span>
+            <span class="bottom-nav-label">Proyectos</span>
+        </a>
+
+        {% if current_user.rol != 'agente' %}
+        <details class="bottom-nav-settings {{ 'is-open' if settings_active }}">
+            <summary class="bottom-nav-item {{ 'active' if settings_active }}">
+                <span class="bottom-nav-icon">
+                    <img src="{{ url_for('static', filename='img/icons/ajustes.png') }}" alt="Ajustes" class="icon-lg bottom-nav-settings-icon">
+                </span>
+                <span class="bottom-nav-label">Ajustes</span>
+            </summary>
+
+            <div class="bottom-nav-settings-panel">
+                <a href="{{ url_for('pintores.listado_pintores') }}"
+                    class="bottom-nav-settings-link {{ 'active' if 'pintores' in request.path and 'sistemas' not in request.path }}">
+                    <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" class="icon-sm" alt="Pintores">
+                    <span>Pintores</span>
+                </a>
+                <a href="{{ url_for('materiales.listado_materiales') }}"
+                    class="bottom-nav-settings-link {{ 'active' if 'materiales' in request.path and 'sistemas' not in request.path }}">
+                    <img src="{{ url_for('static', filename='img/icons/tools.png') }}" class="icon-sm" alt="Materiales">
+                    <span>Materiales</span>
+                </a>
+                {% if current_user.username == 'sysadm' %}
+                <a href="{{ url_for('usuarios.listado_usuarios') }}"
+                    class="bottom-nav-settings-link {{ 'active' if 'usuarios' in request.path and 'dashboard' not in request.path }}">
+                    <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" class="icon-sm" alt="Usuarios">
+                    <span>Usuarios</span>
+                </a>
+                {% endif %}
+            </div>
+        </details>
+        {% endif %}
+
+        <a href="{{ url_for('auth.logout') }}" class="bottom-nav-item">
+            <span class="bottom-nav-icon">
+                <img src="{{ url_for('static', filename='img/icons/cierre-de-sesion-de-usuario.png') }}" alt="Salir" class="icon-lg">
+            </span>
+            <span class="bottom-nav-label">Salir</span>
+        </a>
+    </div>
+</nav>

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Editar Pintor - APROMAN{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-lg icon-align-middle mr-sm">
+        Editar Pintor: {{ pintor.nombre }}
+    </h1>
+    <p class="dashboard-subtitle">Modifica la informacion de este pintor.</p>
+</div>
+
+<div style="margin-bottom: var(--espaciado-lg);">
+    <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-outline">Volver al Catalogo</a>
+</div>
+
+<div class="card card-form" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Modificar Nombre</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('pintores.editar_pintor', id=pintor.id) }}">
+            <div class="div-form-group">
+                <label class="label-required">Nombre Completo *</label>
+                <input type="text" name="nombre" value="{{ pintor.nombre }}" class="input-text" required>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" class="icon-sm mr-xs">
+                    Actualizar Datos
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

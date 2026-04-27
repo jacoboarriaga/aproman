@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuario - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-lg">
+        Editar Usuario: {{ usuario.nombre }}
+    </h1>
+    <p class="dashboard-subtitle">Modificando los atributos o los accesos de credenciales de la cuenta.</p>
+</div>
+
+<div class="card card-form-container">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('usuarios.editar_usuario', id=usuario.id) }}" id="formUsuarioEdit">
+            
+            <div class="form-grid">
+                <!-- Nombre y Username -->
+                <div class="div-form-group">
+                    <label class="label-required" for="nombre">Nombre Completo</label>
+                    <input type="text" id="nombre" name="nombre" class="input-text" required maxlength="150" value="{{ usuario.nombre }}">
+                </div>
+                
+                <div class="div-form-group">
+                    <label class="label-required" for="username">Nombre de Usuario</label>
+                    <input type="text" id="username" name="username" class="input-text" required maxlength="50" value="{{ usuario.username }}" pattern="^\S+$" title="El nombre de usuario no debe contener espacios en blanco">
+                </div>
+
+                <!-- Correo y Rol -->
+                <div class="div-form-group">
+                    <label class="label-normal" for="email">Correo Electrónico (Opcional)</label>
+                    <input type="email" id="email" name="email" class="input-text" maxlength="100" value="{{ usuario.email or '' }}">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required" for="rol">Rol del Usuario</label>
+                    {% if current_user.id == usuario.id %}
+                        <!-- Impedir auto-quitarse los permisos de administrador -->
+                        <input type="text" class="input-text" value="Administrador" disabled>
+                        <input type="hidden" name="rol" value="administrador">
+                        <small class="text-warning-small">No puedes modificar tu propio rol por seguridad de acceso.</small>
+                    {% else %}
+                        <select id="rol" name="rol" class="form-control" required>
+                            <option value="agente" {% if usuario.rol == 'agente' %}selected{% endif %}>Agente Evaluador</option>
+                            <option value="administrador" {% if usuario.rol == 'administrador' %}selected{% endif %}>Administrador</option>
+                        </select>
+                    {% endif %}
+                </div>
+
+                <!-- Contraseña (Dejar en blanco para omitir) -->
+                <div class="div-form-group">
+                    <label class="label-normal" for="password">Nueva Contraseña</label>
+                    <input type="password" id="password" name="password" class="input-text" minlength="4" placeholder="(Dejar en blanco para NO cambiarla)">
+                </div>
+                
+                <div class="div-form-group">
+                    <label class="label-normal" for="password_confirm">Confirmar Nueva Contraseña</label>
+                    <input type="password" id="password_confirm" name="password_confirm" class="input-text" minlength="4">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-normal">
+                        <input type="checkbox" name="puede_ver_costos" value="1" {% if usuario.puede_ver_costos %}checked{% endif %}>
+                        Puede ver costos en PDF
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('usuarios.listado_usuarios') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Actualizar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+{% endblock %}

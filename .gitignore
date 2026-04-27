@@ -1,0 +1,10 @@
+# entorno
+wenv/
+
+# variables de entorno
+.env
+
+# helpers
+helper/
+
+

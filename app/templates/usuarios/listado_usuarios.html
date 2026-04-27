@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion de Usuarios - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Usuarios" class="icon-lg">
+        Gestion de Usuarios
+    </h1>
+    <a href="{{ url_for('usuarios.crear_usuario') }}" class="btn btn-primary">
+        <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Agregar" class="icon-sm">
+        Crear Usuario
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Usuarios</h2>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Codigo</th>
+                        <th>Usuario</th>
+                        <th>Nombre</th>
+                        <th>Rol</th>
+                        <th>Proyectos</th>
+                        <th>Costos</th>
+                        <th>Estado</th>
+                        <th style="width: 220px;" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr>
+                        <td><strong>{{ u.id }}</strong></td>
+                        <td>{{ u.username }}</td>
+                        <td><strong>{{ u.nombre }}</strong></td>
+                        <td>
+                            <span class="badge badge-{% if u.rol == 'administrador' %}activo{% else %}pendiente{% endif %}">
+                                {{ u.rol|upper }}
+                            </span>
+                        </td>
+                        <td>{{ u.total_proyectos }}</td>
+                        <td>
+                            <span class="badge badge-{% if u.puede_ver_costos %}completado{% else %}pendiente{% endif %}">
+                                {% if u.puede_ver_costos %}SI{% else %}NO{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if u.is_active %}
+                            <span class="badge badge-completado">ACTIVO</span>
+                            {% else %}
+                            <span class="badge badge-cancelado">INACTIVO</span>
+                            {% endif %}
+                        </td>
+                        <td class="cell-actions">
+                            <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}" class="btn btn-secondary btn-small">
+                                <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                                Editar
+                            </a>
+
+                            {% if current_user.id != u.id %}
+                            <form action="{{ url_for('usuarios.toggle_estado', id=u.id) }}" method="POST" class="inline-form">
+                                <button type="submit" class="btn btn-secondary btn-small">
+                                    {% if u.is_active %}Desactivar{% else %}Activar{% endif %}
+                                </button>
+                            </form>
+
+                            {% if u.total_proyectos == 0 %}
+                            <form action="{{ url_for('usuarios.eliminar_usuario', id=u.id) }}" method="POST" class="inline-form"
+                                onsubmit="return confirm('Seguro que deseas eliminar definitivamente este usuario?');">
+                                <button type="submit" class="btn btn-error btn-small">
+                                    <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" alt="Eliminar" class="icon-sm">
+                                    Eliminar
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center p-lg text-gray-500">
+                            No se encontraron usuarios en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for u in usuarios %}
+            <div class="mobile-card {% if not u.is_active %}opacity-60{% endif %}">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ u.nombre }}</div>
+                    <span class="badge badge-{% if u.rol == 'administrador' %}activo{% else %}pendiente{% endif %}">
+                        {{ u.rol|upper }}
+                    </span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Codigo:</span>
+                        <span class="mobile-card-value">{{ u.id }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Usuario:</span>
+                        <span class="mobile-card-value">{{ u.username }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Proyectos:</span>
+                        <span class="mobile-card-value"><strong>{{ u.total_proyectos }}</strong></span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Costos:</span>
+                        <span class="mobile-card-value">{% if u.puede_ver_costos %}SI{% else %}NO{% endif %}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Estado:</span>
+                        <span class="mobile-card-value">{% if u.is_active %}ACTIVO{% else %}INACTIVO{% endif %}</span>
+                    </div>
+                </div>
+                <div class="mobile-card-actions">
+                    <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}" class="btn btn-secondary btn-small">
+                        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                        Editar
+                    </a>
+
+                    {% if current_user.id != u.id %}
+                    <form action="{{ url_for('usuarios.toggle_estado', id=u.id) }}" method="POST" class="flex-full">
+                        <button type="submit" class="btn btn-secondary btn-small w-100">
+                            {% if u.is_active %}Desactivar{% else %}Activar{% endif %}
+                        </button>
+                    </form>
+
+                    {% if u.total_proyectos == 0 %}
+                    <form action="{{ url_for('usuarios.eliminar_usuario', id=u.id) }}" method="POST" class="flex-full"
+                        onsubmit="return confirm('Eliminar cuenta permanentemente?');">
+                        <button type="submit" class="btn btn-error btn-small w-100">Eliminar</button>
+                    </form>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center p-lg text-gray-500">
+                No se encontraron usuarios en el sistema.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

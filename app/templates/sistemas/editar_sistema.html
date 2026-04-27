@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Editar {{ sistema.sistema_nombre }} - APROMAN{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" class="icon-lg icon-align-middle mr-sm">
+        Editar {{ sistema.sistema_nombre }}
+    </h1>
+    <p class="dashboard-subtitle">
+        Perteneciente al Proyecto: <strong>{{ sistema.proyecto_codigo }} - {{ sistema.proyecto_cliente }}</strong>
+    </p>
+</div>
+
+<div style="margin-bottom: var(--espaciado-lg); display: flex; gap: var(--espaciado-sm); flex-wrap: wrap;">
+    <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-outline">
+        ← Volver al Sistema
+    </a>
+</div>
+
+<div class="card card-form">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('sistemas.editar_sistema', id=sistema.id) }}">
+            
+            <div class="form-grid">
+                
+                <div class="div-form-group">
+                    <label class="label-required">Precio por M2 Inicial ($) *</label>
+                    <input class="input-text numeric-input" type="number" step="0.01" min="0" name="monto_inicial" id="monto_inicial" required value="{{ '%0.2f'|format(sistema.monto_inicial|float) }}">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Metros Cuadrados Iniciales *</label>
+                    <input class="input-text numeric-input" type="number" step="0.01" min="0" name="metros_cuadrados_iniciales" id="metros_cuadrados_iniciales" required value="{{ '%0.2f'|format(sistema.metros_cuadrados_iniciales|float) }}">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Monto Total del Servicio ($)</label>
+                    <input class="input-text" type="text" id="costo_servicio_m2_inicial" readonly value="${{ '%0.2f'|format(sistema.costo_servicio_m2_inicial|float) }}">
+                    <small style="color: var(--color-texto-claro);">Calculado automáticamente</small>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Hombres por Día Iniciales *</label>
+                    <input class="input-text" type="number" min="0" name="hombres_por_dia_iniciales" required value="{{ sistema.hombres_por_dia_iniciales }}">
+                </div>
+
+                <div class="div-form-group" style="grid-column: 1 / -1;">
+                    <label>Costo de Producto Terminado Inicial ($)</label>
+                    <input class="input-text numeric-input" type="number" step="0.01" min="0" name="producto_terminado_inicial" value="{{ '%0.2f'|format(sistema.producto_terminado_inicial|default(0)|float) }}">
+                </div>
+
+            </div>
+
+            <div class="form-actions" style="margin-top: var(--espaciado-lg); display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" class="icon-sm mr-xs">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const montoInput = document.getElementById('monto_inicial');
+    const metrosInput = document.getElementById('metros_cuadrados_iniciales');
+    const costoDisplay = document.getElementById('costo_servicio_m2_inicial');
+
+    function calcularCosto() {
+        const monto = parseFloat(montoInput.value) || 0;
+        const metros = parseFloat(metrosInput.value) || 0;
+        const costo = monto * metros;
+        costoDisplay.value = '$' + costo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    montoInput.addEventListener('input', calcularCosto);
+    metrosInput.addEventListener('input', calcularCosto);
+});
+</script>
+{% endblock %}

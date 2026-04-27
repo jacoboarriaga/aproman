@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Catalogo de Pintores - APROMAN{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" class="icon-lg">
+        Catalogo de Pintores
+    </h1>
+    <a href="{{ url_for('pintores.crear_pintor') }}" class="btn btn-primary">
+        <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" class="icon-sm">
+        Registrar Nuevo Pintor
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Pintores Registrados</h2>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 96px;">Codigo</th>
+                        <th>Nombre</th>
+                        <th>Fecha de Registro</th>
+                        <th style="width: 200px; text-align: center;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pintores %}
+                    <tr>
+                        <td><strong>{{ p.id }}</strong></td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td>{{ p.fecha_formateada }}</td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <a href="{{ url_for('pintores.editar_pintor', id=p.id) }}" class="btn btn-small btn-secondary">
+                                <img src="{{ url_for('static', filename='img/icons/editar.png') }}" class="icon-sm">
+                                Editar
+                            </a>
+                            <a href="{{ url_for('pintores.eliminar_pintor', id=p.id) }}" class="btn btn-small btn-error">
+                                <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm">
+                                Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: var(--color-texto-claro);">
+                            No hay pintores registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for p in pintores %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ p.nombre }}</div>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Codigo:</span>
+                        <span class="mobile-card-value">{{ p.id }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Nombre:</span>
+                        <span class="mobile-card-value">{{ p.nombre }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Registro:</span>
+                        <span class="mobile-card-value">{{ p.fecha_formateada }}</span>
+                    </div>
+                </div>
+                <div class="mobile-card-actions">
+                    <a href="{{ url_for('pintores.editar_pintor', id=p.id) }}" class="btn btn-small btn-secondary">
+                        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" class="icon-sm">
+                        Editar
+                    </a>
+                    <a href="{{ url_for('pintores.eliminar_pintor', id=p.id) }}" class="btn btn-small btn-error">
+                        <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm">
+                        Eliminar
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center p-lg text-gray-500">
+                No hay pintores registrados.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#042D49">
+    <title>{% block title %}APROMAN{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('apromanSidebarCollapsed') === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch (error) {}
+        })();
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css', v='20260424-4') }}">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Pantalla de carga global -->
+    <div id="global-loader" class="global-loader">
+        <div class="loader-spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <div class="dashboard-layout">
+        {% include 'includes/_sidebar.html' %}
+
+        <main class="main-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-overlay" id="flash-overlay" role="presentation">
+                        <div class="flash-modal" id="flash-modal" role="alertdialog" aria-modal="true" aria-labelledby="flash-modal-title">
+                            <button type="button" class="flash-modal-close" id="flash-modal-close" aria-label="Cerrar mensaje">
+                                &times;
+                            </button>
+                            <div class="flash-modal-header">
+                                <div class="flash-modal-icon">
+                                    &#10003;
+                                </div>
+                                <div>
+                                    <h2 class="flash-modal-title" id="flash-modal-title">Mensaje del sistema</h2>
+                                    <p class="flash-modal-subtitle">Te mostramos el resultado de la última acción.</p>
+                                </div>
+                            </div>
+                            <div class="flash-list">
+                                {% for category, message in messages %}
+                                    <div class="message {{ category if category in ['success', 'error', 'warning', 'info'] else 'info' }}">
+                                        <strong>{{ category|title }}</strong>
+                                        <span>{{ message }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="flash-modal-actions">
+                                <button type="button" class="btn btn-primary" id="flash-modal-button">Entendido</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% include 'includes/_bottom_nav.html' %}
+
+    {% block scripts %}{% endblock %}
+
+    <!-- Registro de Service Worker para PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('ServiceWorker registrado. Alcance:', reg.scope);
+                }).catch(err => {
+                    console.error('Error al registrar ServiceWorker:', err);
+                });
+            });
+        }
+    </script>
+
+    <!-- Script de control de pantalla de carga -->
+    <script>
+        // Ocultar el loader al terminar de cargar todo el DOM (y los recursos)
+        window.addEventListener('load', function() {
+            const loader = document.getElementById('global-loader');
+            if (loader) {
+                loader.classList.add('hidden');
+                setTimeout(() => loader.style.display = 'none', 300);
+            }
+        });
+
+        // Mostrar el loader al intentar navegar 
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebar-collapse-toggle');
+            const setSidebarState = (collapsed) => {
+                document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+                if (sidebarToggle) {
+                    sidebarToggle.setAttribute('aria-expanded', String(!collapsed));
+                    sidebarToggle.setAttribute('aria-label', collapsed ? 'Expandir menu' : 'Minimizar menu');
+                }
+                try {
+                    localStorage.setItem('apromanSidebarCollapsed', collapsed ? '1' : '0');
+                } catch (error) {}
+            };
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    setSidebarState(!document.documentElement.classList.contains('sidebar-collapsed'));
+                });
+                setSidebarState(document.documentElement.classList.contains('sidebar-collapsed'));
+            }
+
+            // Formularios
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    // Ignorar si se previene por defecto o falla la validación de HTML5
+                    if (e.defaultPrevented || (form.checkValidity && !form.checkValidity())) return;
+                    
+                    // Si el onSubmit devuelve false, usualmente defaultPrevented es true, 
+                    // pero para mayor seguridad solo en envios exitosos.
+                    const loader = document.getElementById('global-loader');
+                    if (loader) {
+                        loader.style.display = 'flex';
+                        setTimeout(() => loader.classList.remove('hidden'), 10);
+                    }
+                });
+            });
+
+            // Enlaces
+            document.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = link.getAttribute('href');
+                    const target = link.getAttribute('target');
+                    
+                    // Ignorar descargas, _blank, links con "#", sin href, JS en línea o con teclas modificadoras
+                    if (!href || href.startsWith('#') || href.startsWith('javascript:') || target === '_blank' || link.hasAttribute('download') || e.ctrlKey || e.metaKey || e.defaultPrevented) {
+                        return;
+                    }
+
+                    const loader = document.getElementById('global-loader');
+                    if (loader) {
+                        loader.style.display = 'flex';
+                        setTimeout(() => loader.classList.remove('hidden'), 10);
+                    }
+                });
+            });
+        });
+
+        // Manejar el bottom-navigation hacia atrás del navegador (BFCache)
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                const loader = document.getElementById('global-loader');
+                if (loader) {
+                    loader.classList.add('hidden');
+                    setTimeout(() => loader.style.display = 'none', 300);
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashOverlay = document.getElementById('flash-overlay');
+            const flashModal = document.getElementById('flash-modal');
+            const flashClose = document.getElementById('flash-modal-close');
+            const flashButton = document.getElementById('flash-modal-button');
+
+            if (!flashOverlay || !flashModal) return;
+
+            const dismissFlashModal = () => {
+                flashOverlay.classList.add('is-closing');
+                flashModal.classList.add('is-closing');
+                setTimeout(() => {
+                    flashOverlay.remove();
+                }, 220);
+            };
+
+            if (flashClose) {
+                flashClose.addEventListener('click', dismissFlashModal);
+            }
+
+            if (flashButton) {
+                flashButton.addEventListener('click', dismissFlashModal);
+            }
+
+            flashOverlay.addEventListener('click', function(event) {
+                if (event.target === flashOverlay) {
+                    dismissFlashModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && document.getElementById('flash-overlay')) {
+                    dismissFlashModal();
+                }
+            });
+
+            setTimeout(() => {
+                if (document.getElementById('flash-overlay')) {
+                    dismissFlashModal();
+                }
+            }, 4200);
+        });
+    </script>
+</body>
+</html>

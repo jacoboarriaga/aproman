@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Registrar Material - AproMan{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/agregar.png') }}" alt="Nuevo Material" class="icon-lg icon-align-middle mr-sm">
+        Registrar Nuevo Material
+    </h1>
+    <p class="dashboard-subtitle">Añade un material al catálogo global para su posterior asignación.</p>
+</div>
+
+<!-- Navegación -->
+<div style="margin-bottom: var(--espaciado-lg);">
+    <a href="{{ url_for('materiales.listado_materiales') }}" class="btn btn-outline">
+        ← Volver al Catálogo
+    </a>
+</div>
+
+<!-- Card: Formulario -->
+<div class="card card-form" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Datos del Material</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('materiales.crear_material') }}">
+            <div class="div-form-group">
+                <label class="label-required">Nombre del Material *</label>
+                <input type="text" name="nombre" class="input-text" required placeholder="Ej. Pintura Azul Aceite Galón">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" class="icon-sm mr-xs">
+                    Guardar Material
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{
+  "name": "APROMAN",
+  "short_name": "Aproman",
+  "description": "Aplicaciones Procolor Manager",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/img/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

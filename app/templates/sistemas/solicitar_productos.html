@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Solicitar Producto - AproMan{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/paint-roller.png') }}" alt="Solicitar Producto"
+            class="icon-xl">
+        Solicitud de Producto
+    </h1>
+    <p class="dashboard-subtitle">Nueva solicitud para el sistema: <strong>{{ sistema.nombre }}</strong>
+        — Proyecto: <strong>{{ sistema.proyecto_codigo }}</strong></p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Nueva Solicitud de Producto</h2>
+    </div>
+
+    <div class="card-body">
+        <form id="form-solicitud" method="POST"
+            action="{{ url_for('sistemas.solicitar_pintura', sistema_id=sistema.id) }}"
+            onsubmit="validarFormulario(event)">
+
+            <!-- ── Información de la solicitud ── -->
+            <h3 class="form-section-title">Información de la Solicitud</h3>
+
+            <div class="form-grid">
+                <div class="div-form-group">
+                    <label class="label-required" for="cod_bodega">Bodega de Origen</label>
+                    <select id="cod_bodega" name="cod_bodega" class="form-control" required>
+                        <option value="">— Seleccione una bodega —</option>
+                        {% for bodega in bodegas %}
+                        <option value="{{ bodega.cod }}">{{ bodega.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required" for="empleado_recibe">Empleado que Recibe</label>
+                    <select id="empleado_recibe" name="empleado_recibe" class="form-control" required>
+                        <option value="">— Seleccione un empleado —</option>
+                        {% for emp in empleados %}
+                        <option value="{{ emp.cod }}">{{ emp.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+
+            </div>
+
+            <!-- ── Detalle de productos ── -->
+            <h3 class="form-section-title">Detalle de Productos Requeridos</h3>
+
+            <div class="table-container">
+                <table class="table" id="tabla-productos">
+                    <thead>
+                        <tr>
+                            <th style="width: 18%;">Código</th>
+                            <th style="width: 28%;">Descripción del Producto</th>
+                            <th style="width: 12%;">Precio Unit.</th>
+                            <th style="width: 12%;">Existencias</th>
+                            <th style="width: 12%;">Cantidad</th>
+                            <th style="width: 12%;">Subtotal</th>
+                            <th style="width: 6%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-productos">
+                        <!-- Filas dinámicas generadas por JS -->
+                    </tbody>
+                    <tfoot>
+                        <tr id="fila-agregar">
+                            <td colspan="7" class="td-agregar-fila">
+                                <button type="button" onclick="agregarFila()" class="btn-agregar-fila-inline">
+                                    <span class="btn-agregar-icon">+</span>
+                                    Añadir producto
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="tfoot-total-label">Total Estimado:</td>
+                            <td class="tfoot-total-valor" id="total-estimado">$0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- ── Acciones ── -->
+            <div class="form-actions">
+                <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-outline">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" alt="Guardar"
+                        class="icon-sm">
+                    Generar Solicitud
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/solicitar_productos.js', v='20260424-2') }}"></script>
+{% endblock %}

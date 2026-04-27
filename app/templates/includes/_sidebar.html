@@ -1,0 +1,98 @@
+<aside class="sidebar">
+    {% set settings_active = current_user.rol == 'administrador' and (
+        ('pintores' in request.path and 'sistemas' not in request.path) or
+        ('materiales' in request.path and 'sistemas' not in request.path) or
+        ('usuarios' in request.path and 'dashboard' not in request.path)
+    ) %}
+    <div class="sidebar-header">
+        <a href="{{ url_for('usuarios.dashboard_administrador' if current_user.rol == 'administrador' else 'usuarios.dashboard_agente') }}"
+            class="sidebar-logo">
+            <img src="{{ url_for('static', filename='img/logo_procolor.png') }}" alt="APROMAN" class="icon-2xl">
+            <span class="sidebar-label">APROMAN</span>
+        </a>
+        <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-toggle" aria-label="Minimizar menu" aria-expanded="true">
+            <span class="sidebar-collapse-icon" aria-hidden="true"></span>
+        </button>
+    </div>
+
+    <nav class="sidebar-menu">
+        <li class="sidebar-menu-item">
+            <a href="{{ url_for('usuarios.dashboard_administrador' if current_user.rol == 'administrador' else 'usuarios.dashboard_agente') }}"
+                class="sidebar-menu-link {{ 'active' if 'dashboard' in request.path }}">
+                <span class="sidebar-menu-icon">
+                    <img src="{{ url_for('static', filename='img/icons/hogar' + ('-blanco' if 'dashboard' in request.path else '') + '.png') }}" class="icon-md" alt="Inicio">
+                </span>
+                <span class="sidebar-label">Inicio</span>
+            </a>
+        </li>
+
+        <li class="sidebar-menu-item">
+            <a href="{{ url_for('proyectos.mis_proyectos') }}"
+                class="sidebar-menu-link {{ 'active' if 'proyectos' in request.path or 'sistemas' in request.path }}">
+                <span class="sidebar-menu-icon">
+                    <img src="{{ url_for('static', filename='img/icons/aplicaciones' + ('-blanco' if 'proyectos' in request.path or 'sistemas' in request.path else '') + '.png') }}" class="icon-md" alt="Proyectos">
+                </span>
+                <span class="sidebar-label">Proyectos</span>
+            </a>
+        </li>
+    </nav>
+
+    {% if current_user.rol == 'administrador' %}
+    <nav class="sidebar-admin-menu">
+            <details class="sidebar-details sidebar-admin-details" {{ 'open' if settings_active }}>
+                <summary class="sidebar-menu-link sidebar-menu-toggle {{ 'active' if settings_active }}">
+                    <span class="sidebar-menu-icon">
+                        <img src="{{ url_for('static', filename='img/icons/ajustes.png') }}" class="icon-md sidebar-settings-icon" alt="Ajustes">
+                    </span>
+                    <span class="sidebar-label">Administracion</span>
+                    <span class="sidebar-menu-caret" aria-hidden="true"></span>
+                </summary>
+
+                <ul class="sidebar-submenu sidebar-admin-submenu">
+                    <li class="sidebar-submenu-item">
+                        <a href="{{ url_for('pintores.listado_pintores') }}"
+                            class="sidebar-submenu-link {{ 'active' if 'pintores' in request.path and 'sistemas' not in request.path }}">
+                            <span class="sidebar-menu-icon">
+                                <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" class="icon-md" alt="Pintores">
+                            </span>
+                            <span class="sidebar-label">Pintores</span>
+                        </a>
+                    </li>
+
+                    <li class="sidebar-submenu-item">
+                        <a href="{{ url_for('materiales.listado_materiales') }}"
+                            class="sidebar-submenu-link {{ 'active' if 'materiales' in request.path and 'sistemas' not in request.path }}">
+                            <span class="sidebar-menu-icon">
+                                <img src="{{ url_for('static', filename='img/icons/tools.png') }}" class="icon-md" alt="Materiales">
+                            </span>
+                            <span class="sidebar-label">Materiales</span>
+                        </a>
+                    </li>
+
+                    {% if current_user.username == 'sysadm' %}
+                    <li class="sidebar-submenu-item">
+                        <a href="{{ url_for('usuarios.listado_usuarios') }}"
+                            class="sidebar-submenu-link {{ 'active' if 'usuarios' in request.path and 'dashboard' not in request.path }}">
+                            <span class="sidebar-menu-icon">
+                                <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" class="icon-md" alt="Usuarios">
+                            </span>
+                            <span class="sidebar-label">Usuarios</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </details>
+    </nav>
+    {% endif %}
+
+    <div class="sidebar-footer">
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar">{{ current_user.username[0]|upper }}</div>
+            <div class="sidebar-user-info">
+                <span class="sidebar-user-name">{{ current_user.get_full_name() }}</span>
+                <span class="sidebar-user-role">{{ current_user.rol|capitalize }}</span>
+            </div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary w-100 mt-sm">Cerrar Sesion</a>
+    </div>
+</aside>

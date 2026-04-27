@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Catálogo de Materiales - AproMan{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/tools.png') }}" alt="Materiales"
+            class="icon-lg icon-align-middle mr-sm">
+        Catálogo de Materiales
+    </h1>
+    <a href="{{ url_for('materiales.crear_material') }}" class="btn btn-primary">
+        <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Agregar" class="icon-sm">
+        Registrar Nuevo Material
+    </a>
+</div>
+
+<!-- Card: Listado -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">Listado de Materiales Aprobados</h2>
+    </div>
+    <div class="card-body">
+
+        <!-- Vista Desktop: Tabla -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Material</th>
+                        <th>Fecha de Ingreso</th>
+                        <th style="width: 220px;" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in materiales %}
+                    <tr>
+                        <td><strong>{{ m.id }}</strong></td>
+                        <td>{{ m.nombre }}</td>
+                        <td>{{ m.fecha_ingreso.strftime('%Y-%m-%d %H:%M') if m.fecha_ingreso else 'Sin Registro' }}</td>
+                        <td class="cell-actions">
+                            <a href="{{ url_for('materiales.editar_material', id=m.id) }}"
+                                class="btn btn-secondary btn-small">
+                                <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                                Editar
+                            </a>
+                            <a href="{{ url_for('materiales.eliminar_material', id=m.id) }}" class="btn btn-small btn-error">
+                                <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" alt="Eliminar" class="icon-sm">
+                                Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center p-lg text-gray-500">
+                            No hay materiales registrados en el catálogo aún.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Vista Mobile: Cards -->
+        <div class="mobile-card-view">
+            {% for m in materiales %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ m.nombre }}</div>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Código:</span>
+                        <span class="mobile-card-value">{{ m.id }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Material:</span>
+                        <span class="mobile-card-value">{{ m.nombre }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Fecha de ingreso:</span>
+                        <span class="mobile-card-value">{{ m.fecha_ingreso.strftime('%Y-%m-%d') if m.fecha_ingreso else 'Sin Registro' }}</span>
+                    </div>
+                </div>
+                <div class="mobile-card-actions">
+                    <a href="{{ url_for('materiales.editar_material', id=m.id) }}" class="btn btn-secondary btn-small">
+                        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" class="icon-sm" alt="Editar">
+                        Editar
+                    </a>
+                    <a href="{{ url_for('materiales.eliminar_material', id=m.id) }}" class="btn btn-small btn-error">
+                        <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm" alt="Eliminar">
+                        Eliminar
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center p-lg text-gray-500">
+                <p>No hay materiales registrados en el catálogo aún.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar {{ proyecto.codigo }} - AproMan{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-lg">
+        Editar Proyecto: {{ proyecto.codigo }}
+    </h1>
+    <p class="dashboard-subtitle">
+        <span class="badge badge-{{ proyecto.estado }}">{{ proyecto.estado|upper }}</span>
+    </p>
+</div>
+
+<!-- Navegación -->
+<div style="margin-bottom: var(--espaciado-lg);">
+    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline">
+        ← Volver al Detalle
+    </a>
+</div>
+
+<!-- Card: Datos del Cliente -->
+<div class="card" style="margin-bottom: var(--espaciado-lg);">
+    <div class="card-header">
+        <h2 class="card-title">
+            <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Cliente" class="icon-md">
+            Datos del Cliente
+        </h2>
+        <p class="card-subtitle">
+            Código actual: <strong>#{{ proyecto.cod_cliente or '—' }}</strong> — Puedes cambiarlo buscando un nuevo código
+        </p>
+    </div>
+    <div class="card-body">
+        <div style="display: flex; gap: var(--espaciado-sm); align-items: flex-end; flex-wrap: wrap;">
+            <div class="div-form-group" style="flex: 1; min-width: 200px; max-width: 320px; margin-bottom: 0;">
+                <label class="label-required">Código de Cliente *</label>
+                <input id="input-cod-erp" class="input-text" type="number" min="1"
+                       placeholder="Ej: 10870"
+                       value="{{ proyecto.cod_cliente or '' }}"
+                       autocomplete="off"
+                       style="font-size: 1.1rem; font-weight: 600; letter-spacing: 1px;">
+            </div>
+            <button type="button" id="btn-buscar-cliente" class="btn btn-primary" style="height: 44px;">
+                <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Buscar" class="icon-sm">
+                Buscar Cliente
+            </button>
+        </div>
+
+        <!-- Alerta de resultado -->
+        <div id="erp-alert" style="display:none; margin-top: var(--espaciado-md); padding: 0.85rem 1rem;
+             border-radius: 8px; font-size: 0.95rem;"></div>
+    </div>
+</div>
+
+<!-- Card: Formulario de Edición -->
+<div class="card" style="margin-bottom: var(--espaciado-lg);">
+    <div class="card-header">
+        <h2 class="card-title">
+            <img src="{{ url_for('static', filename='img/icons/carpeta.png') }}" alt="Formulario" class="icon-md">
+            Información del Proyecto
+        </h2>
+        <p class="card-subtitle">Modifica los campos necesarios y guarda los cambios</p>
+    </div>
+
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('proyectos.editar_proyecto', pk=proyecto.id) }}" id="form-editar-proyecto">
+
+            <!-- Campos ocultos -->
+            <input type="hidden" id="h-cod-cliente"      name="cod_cliente"        value="{{ proyecto.cod_cliente or '' }}">
+            <input type="hidden" id="h-cliente-nombre"   name="cliente_nombre"     value="{{ proyecto.cliente_nombre or '' }}">
+            <input type="hidden" id="h-cliente-dui-nit"  name="cliente_dui_nit"    value="{{ proyecto.cliente_dui_nit or '' }}">
+            <input type="hidden" id="h-cliente-nrc"      name="cliente_nrc"        value="{{ proyecto.cliente_nrc or '' }}">
+            <input type="hidden" id="h-cliente-telefono" name="cliente_telefono"   value="{{ proyecto.cliente_telefono or '' }}">
+            <input type="hidden" id="h-cliente-email"    name="cliente_email"      value="{{ proyecto.cliente_email or '' }}">
+            <input type="hidden" id="h-cliente-dir"      name="cliente_direccion"  value="{{ proyecto.cliente_direccion or '' }}">
+            <input type="hidden" id="h-cliente-ubic"     name="cliente_ubicacion"  value="{{ proyecto.cliente_ubicacion or '' }}">
+
+            <!-- Grid de datos del cliente (readonly) -->
+            <div style="margin-bottom: var(--espaciado-lg);">
+                <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-secundario);
+                            margin-bottom: var(--espaciado-md); padding-bottom: 6px;
+                            border-bottom: 1px solid var(--color-borde);">
+                    Datos del Cliente
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--espaciado-md);">
+
+                    <div class="div-form-group">
+                        <label class="label-normal">Nombre</label>
+                        <input id="d-nombre" class="input-text" type="text" readonly
+                               value="{{ proyecto.cliente_nombre or '' }}"
+                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                    </div>
+
+                    <div class="div-form-group">
+                        <label class="label-normal">NIT</label>
+                        <input id="d-nit" class="input-text" type="text" readonly
+                               value="{{ proyecto.cliente_dui_nit or '' }}"
+                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                    </div>
+
+                    <div class="div-form-group">
+                        <label class="label-normal">NRC</label>
+                        <input id="d-nrc" class="input-text" type="text" readonly
+                               value="{{ proyecto.cliente_nrc or '' }}"
+                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                    </div>
+
+                    <div class="div-form-group">
+                        <label class="label-normal">Teléfono</label>
+                        <input id="d-tel" class="input-text" type="text" readonly
+                               value="{{ proyecto.cliente_telefono or '' }}"
+                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                    </div>
+
+                    <div class="div-form-group">
+                        <label class="label-normal">Email</label>
+                        <input id="d-email" class="input-text" type="text" readonly
+                               value="{{ proyecto.cliente_email or '' }}"
+                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                    </div>
+
+                    <div class="div-form-group">
+                        <label class="label-normal">Dirección</label>
+                        <input id="d-dir" class="input-text" type="text" readonly
+                               value="{{ proyecto.cliente_direccion or '' }}"
+                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                    </div>
+
+                    <div class="div-form-group">
+                        <label class="label-normal">Ubicación Geográfica</label>
+                        <input id="d-ubic" class="input-text" type="text" readonly
+                               value="{{ proyecto.cliente_ubicacion or '' }}"
+                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado y Agente -->
+            <div style="border-top: 1px solid var(--color-borde); padding-top: var(--espaciado-md); margin-top: var(--espaciado-md);">
+                <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-secundario); margin-bottom: var(--espaciado-md);">
+                    Configuración del Proyecto
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--espaciado-md);">
+                    <div class="div-form-group">
+                        <label class="label-required">Estado</label>
+                        <select name="estado" class="input-text">
+                            <option value="pendiente"  {% if proyecto.estado=='pendiente'  %}selected{% endif %}>Pendiente</option>
+                            <option value="activo"     {% if proyecto.estado=='activo'     %}selected{% endif %}>Activo</option>
+                            <option value="completado" {% if proyecto.estado=='completado' %}selected{% endif %}>Completado</option>
+                        </select>
+                    </div>
+
+                    <div class="div-form-group">
+                        <label class="label-required">Agente Asignado *</label>
+                        <select name="agente_id" required class="input-text">
+                            <option value="">-- Seleccione el agente responsable --</option>
+                            {% for agente in agentes %}
+                            <option value="{{ agente.id }}" {% if agente.id == proyecto.agente_id %}selected{% endif %}>
+                                {{ agente.nombre }} ({{ agente.username }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="form-actions" style="margin-top: var(--espaciado-lg);">
+                <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" id="btn-submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" alt="Guardar" class="icon-sm mr-xs">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const inputCod  = document.getElementById('input-cod-erp');
+    const btnBuscar = document.getElementById('btn-buscar-cliente');
+    const alertBox  = document.getElementById('erp-alert');
+
+    const dNombre = document.getElementById('d-nombre');
+    const dNit    = document.getElementById('d-nit');
+    const dNrc    = document.getElementById('d-nrc');
+    const dTel    = document.getElementById('d-tel');
+    const dEmail  = document.getElementById('d-email');
+    const dDir    = document.getElementById('d-dir');
+    const dUbic   = document.getElementById('d-ubic');
+
+    const hCod    = document.getElementById('h-cod-cliente');
+    const hNombre = document.getElementById('h-cliente-nombre');
+    const hNit    = document.getElementById('h-cliente-dui-nit');
+    const hNrc    = document.getElementById('h-cliente-nrc');
+    const hTel    = document.getElementById('h-cliente-telefono');
+    const hEmail  = document.getElementById('h-cliente-email');
+    const hDir    = document.getElementById('h-cliente-dir');
+    const hUbic   = document.getElementById('h-cliente-ubic');
+
+    function showAlert(msg, tipo) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = tipo === 'error' ? 'rgba(220,53,69,.15)' : 'rgba(25,135,84,.15)';
+        alertBox.style.border     = tipo === 'error' ? '1px solid rgba(220,53,69,.4)' : '1px solid rgba(25,135,84,.4)';
+        alertBox.style.color      = tipo === 'error' ? '#dc3545' : '#198754';
+        alertBox.textContent      = msg;
+    }
+
+    function fillCliente(c) {
+        dNombre.value = c.NOMBRE_CLIENTE      || '';
+        dNit.value    = c.NIT_CLIENTE         || '';
+        dNrc.value    = c.NRC_CLIENTE         || '';
+        dTel.value    = c.TELEFONO            || '';
+        dEmail.value  = c.CORREO_CLIENTE      || '';
+        dDir.value    = c.DIRECCION           || '';
+        dUbic.value   = c.UBICACION_GEOGRAFICA|| '';
+
+        hCod.value    = c.COD_CLIENTE         || '';
+        hNombre.value = c.NOMBRE_CLIENTE      || '';
+        hNit.value    = c.NIT_CLIENTE         || '';
+        hNrc.value    = c.NRC_CLIENTE         || '';
+        hTel.value    = c.TELEFONO            || '';
+        hEmail.value  = c.CORREO_CLIENTE      || '';
+        hDir.value    = c.DIRECCION           || '';
+        hUbic.value   = c.UBICACION_GEOGRAFICA|| '';
+    }
+
+    async function buscarCliente() {
+        const codigo = inputCod.value.trim();
+        if (!codigo) {
+            showAlert('Ingresa un código de cliente.', 'error');
+            return;
+        }
+        alertBox.style.display = 'none';
+        btnBuscar.disabled = true;
+        btnBuscar.textContent = '⏳ Buscando…';
+
+        try {
+            const resp = await fetch(`{{ url_for('proyectos.buscar_cliente_erp') }}?codigo=${encodeURIComponent(codigo)}`);
+            const data = await resp.json();
+            if (!resp.ok || data.error) {
+                showAlert(data.error || 'Error desconocido.', 'error');
+            } else {
+                showAlert(`Cliente encontrado correctamente.`, 'ok');
+                fillCliente(data.cliente);
+            }
+        } catch (e) {
+            showAlert('Error de red. Intenta de nuevo.', 'error');
+        } finally {
+            btnBuscar.disabled = false;
+            btnBuscar.innerHTML = `<img src="{{ url_for('static', filename='img/icons/informacion.png') }}" class="icon-sm" alt="Buscar"> Buscar Cliente`;
+        }
+    }
+
+    btnBuscar.addEventListener('click', buscarCliente);
+    inputCod.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); buscarCliente(); } });
+})();
+</script>
+{% endblock %}

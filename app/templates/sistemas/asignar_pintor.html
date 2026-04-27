@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Asignar Pintor - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}"
+            class="icon-lg mr-sm">
+        Asignar Pintor
+    </h1>
+    <p class="dashboard-subtitle">
+        Al Sistema: <strong>{{ sistema.nombre }}</strong>
+    </p>
+</div>
+
+<div style="margin-bottom: var(--espaciado-lg); display: flex; gap: var(--espaciado-sm); flex-wrap: wrap;">
+    <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-outline">
+        ← Volver al Sistema
+    </a>
+</div>
+
+<div class="card card-form" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('sistemas.asignar_pintor', sistema_id=sistema.id) }}">
+
+            <div class="form-grid">
+                <!-- Combobox Pintor -->
+                <div class="div-form-group" style="grid-column: 1 / -1;">
+                    <label class="label-required">Seleccione un Pintor del Catalogo *</label>
+                    <select class="input-text" name="pintor_id" required>
+                        <option value="">-- Selecciona --</option>
+                        {% for p in pintores %}
+                        <option value="{{ p.id }}">{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Pago por Día ($) *</label>
+                    <input class="input-text numeric-input" type="number" step="0.01" min="0" name="pago_dia"
+                        id="pago_dia" required value="0">
+                </div>
+
+                <div class="div-form-group">
+                    <label>Días Seleccionados</label>
+                    <input class="input-text" type="text" id="dias_display" readonly
+                        style="background-color: #f3f4f6; font-weight: bold; font-size: 1.1rem; border: 2px solid var(--color-borde); text-align: center;"
+                        value="0 días">
+                    <input type="hidden" name="dias_trabajados" id="dias_trabajados" value="0">
+                    <input type="hidden" name="fechas_especificas" id="fechas_especificas" value="">
+                </div>
+
+                <!-- Calendario -->
+                <div class="div-form-group" style="grid-column: 1 / -1;">
+                    <label class="label-required">Seleccione las Fechas de Trabajo *</label>
+                    <div id="calendario-container"
+                        style="border: 1px solid var(--color-borde); border-radius: 8px; overflow: hidden; user-select: none;">
+                        <div id="calendario-nav"
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--color-principal); color: white;">
+                            <button type="button" id="btn-prev"
+                                style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 4px 8px;">◀</button>
+                            <span id="calendario-titulo" style="font-weight: bold; font-size: 1rem;"></span>
+                            <button type="button" id="btn-next"
+                                style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 4px 8px;">▶</button>
+                        </div>
+                        <div id="calendario-dias-semana"
+                            style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.8rem; color: var(--color-texto-claro); padding: 8px 0; border-bottom: 1px solid var(--color-borde);">
+                            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+                        </div>
+                        <div id="calendario-grid"
+                            style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 8px;"></div>
+                    </div>
+                    <small style="color: var(--color-texto-claro); margin-top: 6px; display: block;">Haz clic en los
+                        días para seleccionarlos o deseleccionarlos.</small>
+                </div>
+
+                <div class="div-form-group" style="grid-column: 1 / -1; margin-top:10px;">
+                    <label>Costo Total a Pagar ($)</label>
+                    <input class="input-text" type="text" id="costo_total" readonly
+                        style="background-color: #f3f4f6; color: var(--color-texto); font-weight: bold; font-size: 1.1rem; border: 2px solid var(--color-borde);"
+                        value="$0.00">
+                </div>
+            </div>
+
+            <div class="form-actions"
+                style="margin-top: var(--espaciado-lg); display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}"
+                        class="icon-sm mr-xs">
+                    Registrar Asignación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const pagoInput = document.getElementById('pago_dia');
+        const diasDisplay = document.getElementById('dias_display');
+        const diasHidden = document.getElementById('dias_trabajados');
+        const fechasHidden = document.getElementById('fechas_especificas');
+        const costoDisplay = document.getElementById('costo_total');
+
+        let currentYear, currentMonth;
+        let selectedDates = new Set();
+
+        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        // Inicializar con el mes actual
+        const hoy = new Date();
+        currentYear = hoy.getFullYear();
+        currentMonth = hoy.getMonth();
+
+        function padZero(n) { return n < 10 ? '0' + n : '' + n; }
+
+        function formatDate(y, m, d) {
+            return y + '-' + padZero(m + 1) + '-' + padZero(d);
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendario-grid');
+            const titulo = document.getElementById('calendario-titulo');
+            grid.innerHTML = '';
+            titulo.textContent = meses[currentMonth] + ' ' + currentYear;
+
+            const primerDia = new Date(currentYear, currentMonth, 1).getDay();
+            const diasEnMes = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // Espacios vacíos antes del día 1
+            for (let i = 0; i < primerDia; i++) {
+                const vacio = document.createElement('div');
+                grid.appendChild(vacio);
+            }
+
+            // Días del mes
+            for (let d = 1; d <= diasEnMes; d++) {
+                const dateStr = formatDate(currentYear, currentMonth, d);
+                const btn = document.createElement('div');
+                btn.textContent = d;
+                btn.dataset.date = dateStr;
+                btn.style.cssText = 'padding: 10px 4px; text-align: center; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.15s ease;';
+
+                if (selectedDates.has(dateStr)) {
+                    btn.style.background = 'var(--color-principal)';
+                    btn.style.color = 'white';
+                    btn.style.fontWeight = 'bold';
+                } else {
+                    btn.style.background = 'var(--color-fondo)';
+                    btn.style.color = 'var(--color-texto)';
+                }
+
+                btn.addEventListener('mouseenter', function () {
+                    if (!selectedDates.has(dateStr)) {
+                        btn.style.background = '#e0e7ff';
+                    }
+                });
+                btn.addEventListener('mouseleave', function () {
+                    if (!selectedDates.has(dateStr)) {
+                        btn.style.background = 'var(--color-fondo)';
+                    }
+                });
+
+                btn.addEventListener('click', function () {
+                    if (selectedDates.has(dateStr)) {
+                        selectedDates.delete(dateStr);
+                    } else {
+                        selectedDates.add(dateStr);
+                    }
+                    renderCalendar();
+                    actualizarCampos();
+                });
+
+                grid.appendChild(btn);
+            }
+        }
+
+        function actualizarCampos() {
+            const count = selectedDates.size;
+            diasDisplay.value = count + (count === 1 ? ' día' : ' días');
+            diasHidden.value = count;
+
+            // Ordenar fechas y guardar
+            const sorted = Array.from(selectedDates).sort();
+            fechasHidden.value = sorted.join(',');
+
+            calcularCosto();
+        }
+
+        function calcularCosto() {
+            const pago = parseFloat(pagoInput.value) || 0;
+            const dias = selectedDates.size;
+            const costo = pago * dias;
+            costoDisplay.value = '$' + costo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        document.getElementById('btn-prev').addEventListener('click', function () {
+            currentMonth--;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendar();
+        });
+
+        document.getElementById('btn-next').addEventListener('click', function () {
+            currentMonth++;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        });
+
+        pagoInput.addEventListener('input', calcularCosto);
+
+        renderCalendar();
+    });
+</script>
+{% endblock %}

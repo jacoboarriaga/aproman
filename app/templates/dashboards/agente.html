@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Agente - APROMAN{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Dashboard" class="icon-lg icon-align-middle mr-sm">
+        Mi Dashboard
+    </h1>
+    <p class="dashboard-subtitle">Bienvenido, {{ current_user.get_full_name() }}</p>
+</div>
+
+<!-- Notificaciones -->
+{% if notificaciones_pendientes > 0 %}
+<div class="message warning mb-xl">
+    <strong class="flex items-center">
+        <img src="{{ url_for('static', filename='img/icons/campana.png') }}" alt="Notificación" class="icon-md icon-align-middle mr-sm">
+        Tienes {{ notificaciones_pendientes }} notificación{% if notificaciones_pendientes > 1 %}es{% endif %} sin leer
+    </strong>
+    <p class="mt-sm">
+        Hay mensajes del sistema que requieren tu atención.
+        <a href="#" class="text-principal font-600">
+            Ver notificaciones →
+        </a>
+    </p>
+</div>
+{% endif %}
+
+<!-- Estadísticas -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/lineas-de-calendario.png') }}" alt="Proyectos" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Total Proyectos</div>
+            <div class="stat-value">{{ total_proyectos }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/calendario-reloj.png') }}" alt="Pendientes" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Pendientes</div>
+            <div class="stat-value">{{ total_pendientes }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/boligrafo-calendario.png') }}" alt="Activos" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Activos</div>
+            <div class="stat-value">{{ total_activos }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/consultar-calendario.png') }}" alt="Completados" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Completados</div>
+            <div class="stat-value">{{ total_completados }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Proyectos Recientes -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">
+            <img src="{{ url_for('static', filename='img/icons/carpeta.png') }}" alt="Proyectos" class="icon-md">
+            Mis Proyectos Recientes
+        </h2>
+        <p class="card-subtitle">Los 10 proyectos más recientes</p>
+    </div>
+
+    <div class="card-body card-body-mobile-flat">
+        {% if proyectos_recientes %}
+        <!-- Vista Desktop: Tabla -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proyecto in proyectos_recientes %}
+                    <tr>
+                        <td><strong>{{ proyecto.codigo }}</strong></td>
+                        <td>{{ proyecto.cliente_nombre }}</td>
+                        <td>
+                            <span class="badge badge-{{ proyecto.estado }}">
+                                {{ proyecto.estado|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ proyecto.fecha_formateada }}</td>
+                        <td style="white-space: nowrap;">
+                            <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
+                                <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" class="icon-sm">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Vista Mobile: Cards -->
+        <div class="mobile-card-view">
+            {% for proyecto in proyectos_recientes %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <strong>{{ proyecto.codigo }}</strong>
+                    <span class="badge badge-{{ proyecto.estado }}">
+                        {{ proyecto.estado|capitalize }}
+                    </span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Cliente:</span>
+                        <span class="mobile-card-value">{{ proyecto.cliente_nombre }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Fecha:</span>
+                        <span class="mobile-card-value">{{ proyecto.fecha_formateada }}</span>
+                    </div>
+                </div>
+                <div class="mobile-card-actions">
+                    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
+                        <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" class="icon-sm">
+                        Ver Detalle
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top: var(--espaciado-lg); text-align: center;">
+            <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-primary">
+                <img src="{{ url_for('static', filename='img/icons/aplicaciones-blanco.png') }}" class="icon-sm">
+                Ver Todos los Proyectos
+            </a>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: var(--color-texto-claro);">
+            <p style="font-size: 3rem; margin-bottom: 1rem;">
+                <img src="{{ url_for('static', filename='img/icons/carpeta-abierta.png') }}" alt="No hay proyectos" class="empty-state-img">
+            </p>
+            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;"><strong>No tienes proyectos aún</strong></p>
+            <p>El administrador pronto te asignará proyectos.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

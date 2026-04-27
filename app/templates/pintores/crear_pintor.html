@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Nuevo Pintor - APROMAN{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/agregar.png') }}" alt="Nuevo" class="icon-lg icon-align-middle mr-sm">
+        Registrar Nuevo Pintor
+    </h1>
+    <p class="dashboard-subtitle">Anade un pintor al catalogo global para su posterior asignacion.</p>
+</div>
+
+<div style="margin-bottom: var(--espaciado-lg);">
+    <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-outline">Volver al Catalogo</a>
+</div>
+
+<div class="card card-form" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Datos del Pintor</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('pintores.crear_pintor') }}">
+            <div class="div-form-group">
+                <label class="label-required">Nombre Completo *</label>
+                <input type="text" name="nombre" class="input-text" required placeholder="Ej: Juan Perez">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" class="icon-sm mr-xs">
+                    Guardar Pintor
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

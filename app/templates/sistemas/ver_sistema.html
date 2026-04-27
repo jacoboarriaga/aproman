@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+{% block title %}{{ sistema.sistema_nombre }} - AproMan{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/paint-roller.png') }}" alt="Sistema" class="icon-lg">
+        {{ sistema.sistema_nombre }}
+    </h1>
+    <p class="dashboard-subtitle">
+        <span class="badge badge-{{ sistema.estado }}">{{ sistema.estado|upper }}</span>
+        &nbsp;
+        <a href="{{ url_for('proyectos.ver_proyecto', pk=sistema.proyecto_id) }}" class="link-muted text-sm">
+            Proyecto: {{ sistema.proyecto_codigo }} - {{ sistema.proyecto_cliente }}
+        </a>
+    </p>
+</div>
+
+<div class="mb-lg flex gap-sm flex-wrap items-center">
+    <a href="{{ url_for('proyectos.ver_proyecto', pk=sistema.proyecto_id) }}" class="btn btn-outline">
+        <img src="{{ url_for('static', filename='img/icons/carpeta-abierta.png') }}" alt="Volver" class="icon-sm">
+        Volver al Proyecto
+    </a>
+
+    {% if current_user.rol == 'administrador' %}
+    <a href="{{ url_for('sistemas.editar_sistema', id=sistema.id) }}" class="btn btn-secondary">
+        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+        Editar
+    </a>
+
+    {% if sistema.estado == 'activo' %}
+    <a href="{{ url_for('sistemas.finalizar_sistema', id=sistema.id) }}" class="btn btn-primary">
+        <img src="{{ url_for('static', filename='img/icons/comprobacion-del-portapapeles.png') }}" alt="Finalizar" class="icon-sm">
+        Finalizar
+    </a>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('sistemas.cambiar_estado', id=sistema.id) }}" class="inline">
+        {% if sistema.estado == 'pendiente' %}
+        <button type="submit" class="btn btn-secondary">
+            <img src="{{ url_for('static', filename='img/icons/boligrafo-calendario.png') }}" alt="Activar" class="icon-sm">
+            Activar
+        </button>
+        {% elif sistema.estado == 'completado' %}
+        <button type="submit" class="btn btn-secondary">
+            <img src="{{ url_for('static', filename='img/icons/calendario-reloj.png') }}" alt="Reabrir" class="icon-sm">
+            Reabrir
+        </button>
+        {% endif %}
+    </form>
+
+    <form method="POST" action="{{ url_for('sistemas.eliminar_sistema', id=sistema.id) }}" class="inline"
+        onsubmit="return confirm('Eliminar este sistema permanentemente? Solo es posible si no tiene pintores, materiales o productos asignados.');">
+        <button type="submit" class="btn btn-error">
+            <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" alt="Eliminar" class="icon-sm">
+            Eliminar
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<div class="grid grid-auto-fit gap-lg mb-lg">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <img src="{{ url_for('static', filename='img/icons/dolar-de-saco.png') }}" alt="Finanzas" class="icon-md">
+                Resumen Financiero
+            </h2>
+        </div>
+        <div class="card-body">
+            <table class="w-100 table-fixed">
+                <tr class="border-b">
+                    <td class="info-label">Monto Inicial</td>
+                    <td class="info-value"><strong>${{ "{:,.2f}".format(sistema.monto_inicial) }}</strong></td>
+                </tr>
+                <tr class="border-b">
+                    <td class="info-label">Metros Cuadrados</td>
+                    <td class="info-value"><strong>{{ "{:,.2f}".format(sistema.metros_cuadrados_iniciales) }} m2</strong></td>
+                </tr>
+                <tr class="border-b">
+                    <td class="info-label">Costo Servicio /M2</td>
+                    <td class="info-value text-secundario"><strong>${{ "{:,.2f}".format(sistema.costo_servicio_m2_inicial) }}</strong></td>
+                </tr>
+                <tr class="border-b">
+                    <td class="info-label">Costo Prod. Terminado /M2</td>
+                    <td class="info-value text-secundario"><strong>${{ "{:,.2f}".format(sistema.producto_terminado_inicial|default(0)) }}</strong></td>
+                </tr>
+
+                {% if sistema.estado == 'completado' %}
+                <tr class="summary-section-row">
+                    <td colspan="2" class="summary-section-title">Cifras de Cierre</td>
+                </tr>
+                <tr class="border-b">
+                    <td class="info-label">Monto Final</td>
+                    <td class="info-value"><strong>${{ "{:,.2f}".format(sistema.monto_final|float) if sistema.monto_final else '0.00' }}</strong></td>
+                </tr>
+                <tr class="border-b">
+                    <td class="info-label">Metros Cuadrados Finales</td>
+                    <td class="info-value"><strong>{{ "{:,.2f}".format(sistema.metros_cuadrados_finales|float) if sistema.metros_cuadrados_finales else '0.00' }} m2</strong></td>
+                </tr>
+                <tr class="border-b">
+                    <td class="info-label">Costo Servicio /M2 Final</td>
+                    <td class="info-value text-secundario"><strong>${{ "{:,.2f}".format(sistema.costo_servicio_m2_final|float) if sistema.costo_servicio_m2_final else '0.00' }}</strong></td>
+                </tr>
+                <tr class="border-b">
+                    <td class="info-label">Costo Prod. Terminado Final</td>
+                    <td class="info-value text-secundario"><strong>${{ "{:,.2f}".format(sistema.producto_terminado_final|float) if sistema.producto_terminado_final else '0.00' }}</strong></td>
+                </tr>
+                {% endif %}
+
+                <tr class="border-b">
+                    <td class="info-label">Total Pintores</td>
+                    <td class="info-value text-error"><strong>${{ "{:,.2f}".format(total_personal) }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="info-label">Total Materiales</td>
+                    <td class="info-value text-error"><strong>${{ "{:,.2f}".format(total_materiales) }}</strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header flex items-center justify-between flex-wrap gap-sm">
+        <h2 class="card-title">
+            <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" alt="Pintores" class="icon-md">
+            Pintores Asignados
+        </h2>
+        {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+        <a href="{{ url_for('sistemas.asignar_pintor', sistema_id=sistema.id) }}" class="btn btn-primary btn-small">
+            <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Agregar" class="icon-sm">
+            Asignar Pintor
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card-body card-body-mobile-flat">
+        {% if personal %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Pintor</th>
+                        <th>Pago/Dia</th>
+                        <th>Dias</th>
+                        <th>Fechas</th>
+                        <th>Total</th>
+                        <th>Registro</th>
+                        {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+                        <th class="w-20 text-center">Acciones</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in personal %}
+                    <tr>
+                        <td><strong>{{ p.pintor_nombre }}</strong></td>
+                        <td>${{ "{:,.2f}".format(p.pago_dia) }}</td>
+                        <td>{{ "{:,.2f}".format(p.dias_trabajados) }}</td>
+                        <td><small class="text-gray-500">{{ p.fechas_especificas or '---' }}</small></td>
+                        <td><strong>${{ "{:,.2f}".format(p.costo_total) }}</strong></td>
+                        <td>{{ p.fecha_formateada }}</td>
+                        {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+                        <td class="text-center">
+                            <a href="{{ url_for('sistemas.editar_asignacion_pintor', id=p.id) }}" class="btn btn-secondary btn-small">
+                                <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                                Editar
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for p in personal %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ p.pintor_nombre }}</div>
+                    <span class="badge badge-activo">${{ "{:,.2f}".format(p.costo_total) }}</span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Pago/Dia:</span>
+                        <span class="mobile-card-value">${{ "{:,.2f}".format(p.pago_dia) }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Dias:</span>
+                        <span class="mobile-card-value">{{ "{:,.2f}".format(p.dias_trabajados) }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Fechas:</span>
+                        <span class="mobile-card-value">{{ p.fechas_especificas or '---' }}</span>
+                    </div>
+                    {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+                    <div class="mobile-card-actions">
+                        <a href="{{ url_for('sistemas.editar_asignacion_pintor', id=p.id) }}" class="btn btn-secondary btn-small">
+                            <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                            Editar
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-container">
+            <p><img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" alt="Pintores" class="empty-state-img"></p>
+            <p>No hay pintores asignados a este sistema aun.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header flex items-center justify-between flex-wrap gap-sm">
+        <h2 class="card-title">
+            <img src="{{ url_for('static', filename='img/icons/tools.png') }}" alt="Materiales" class="icon-md">
+            Materiales Asignados
+        </h2>
+        {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+        <a href="{{ url_for('sistemas.asignar_material', sistema_id=sistema.id) }}" class="btn btn-primary btn-small">
+            <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Agregar" class="icon-sm">
+            Asignar Material
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card-body card-body-mobile-flat">
+        {% if materiales %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Material</th>
+                        <th>Costo</th>
+                        <th>Descripcion</th>
+                        <th>Registro</th>
+                        {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+                        <th class="w-20 text-center">Acciones</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in materiales %}
+                    <tr>
+                        <td><strong>{{ m.material_nombre }}</strong></td>
+                        <td>
+                            {% if m.costo_material %}
+                            <strong>${{ "{:,.2f}".format(m.costo_material) }}</strong>
+                            {% else %}
+                            <span class="text-gray-500">---</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-gray-500">{{ m.descripcion or '---' }}</small></td>
+                        <td>{{ m.fecha_formateada }}</td>
+                        {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+                        <td class="text-center">
+                            <a href="{{ url_for('sistemas.editar_asignacion_material', id=m.id) }}" class="btn btn-secondary btn-small">
+                                <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                                Editar
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for m in materiales %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ m.material_nombre }}</div>
+                    {% if m.costo_material %}
+                    <span class="badge badge-completado">${{ "{:,.2f}".format(m.costo_material) }}</span>
+                    {% endif %}
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Descripcion:</span>
+                        <span class="mobile-card-value">{{ m.descripcion or '---' }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Registro:</span>
+                        <span class="mobile-card-value">{{ m.fecha_formateada }}</span>
+                    </div>
+                    {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+                    <div class="mobile-card-actions">
+                        <a href="{{ url_for('sistemas.editar_asignacion_material', id=m.id) }}" class="btn btn-secondary btn-small">
+                            <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                            Editar
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-container">
+            <p><img src="{{ url_for('static', filename='img/icons/tools.png') }}" alt="Materiales" class="empty-state-img"></p>
+            <p>No hay materiales asignados a este sistema aun.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header flex items-center justify-between flex-wrap gap-sm">
+        <h2 class="card-title">
+            <img src="{{ url_for('static', filename='img/icons/paint-roller.png') }}" alt="Despachos" class="icon-md">
+            Despachos Procolor
+        </h2>
+        {% if sistema.estado == 'activo' and current_user.rol == 'administrador' %}
+        <a href="{{ url_for('sistemas.solicitar_pintura', sistema_id=sistema.id) }}" class="btn btn-primary btn-small">
+            <img src="{{ url_for('static', filename='img/icons/cajas-blanco.png') }}" alt="Solicitar" class="icon-sm">
+            Solicitar Despacho
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card-body card-body-mobile-flat">
+        {% if solicitudes_pintura %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>No. Doc</th>
+                        <th>Fecha</th>
+                        <th>Codigo</th>
+                        <th>Producto</th>
+                        <th>UM</th>
+                        <th>Cantidad</th>
+                        {% if puede_ver_costos %}
+                        <th>Costo Prom.</th>
+                        {% endif %}
+                        <th>Precio Unit.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in solicitudes_pintura %}
+                    <tr>
+                        <td><strong>{{ s.NUM_DOCUMENTO }}</strong></td>
+                        <td>{{ s.fecha_doc }}</td>
+                        <td><code class="text-sm">{{ s.COD_PRODUCTO }}</code></td>
+                        <td>{{ s.nombre_producto }}</td>
+                        <td>{{ s.unidad_medida }}</td>
+                        <td><strong>{{ "{:,.2f}".format(s.CANTIDAD) }}</strong></td>
+                        {% if puede_ver_costos %}
+                        <td>${{ "{:,.2f}".format(s.costo_promedio or 0) }}</td>
+                        {% endif %}
+                        <td>${{ "{:,.2f}".format(s.precio_unitario or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for s in solicitudes_pintura %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ s.nombre_producto }}</div>
+                    <span class="badge badge-activo">{{ s.NUM_DOCUMENTO }}</span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Fecha:</span>
+                        <span class="mobile-card-value">{{ s.fecha_doc }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Codigo:</span>
+                        <span class="mobile-card-value">{{ s.COD_PRODUCTO }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Cantidad:</span>
+                        <span class="mobile-card-value text-secundario font-700">{{ "{:,.2f}".format(s.CANTIDAD) }} {{ s.unidad_medida }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Precio Unit.:</span>
+                        <span class="mobile-card-value">${{ "{:,.2f}".format(s.precio_unitario or 0) }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-container">
+            <p><img src="{{ url_for('static', filename='img/icons/paint-roller.png') }}" alt="Despachos" class="empty-state-img"></p>
+            <p>No hay despachos Procolor para este sistema aun.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

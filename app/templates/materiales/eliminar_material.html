@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Eliminar Material - AproMan{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title" style="color: var(--color-error);">
+        <img src="{{ url_for('static', filename='img/icons/eliminar-rojo.png') }}" alt="Eliminar" class="icon-lg icon-align-middle mr-sm">
+        Eliminar Material
+    </h1>
+    <p class="dashboard-subtitle">Esta acción no se puede deshacer.</p>
+</div>
+
+<!-- Navegación -->
+<div style="margin-bottom: var(--espaciado-lg);">
+    <a href="{{ url_for('materiales.listado_materiales') }}" class="btn btn-outline">
+        ← Cancelar y Volver
+    </a>
+</div>
+
+<!-- Card de Confirmación -->
+<div class="card card-form" style="max-width: 600px; margin: 0 auto; border: 1px solid var(--color-error);">
+    <div class="card-header" style="background-color: #fee2e2; border-bottom: 1px solid #fca5a5;">
+        <h2 class="card-title" style="color: var(--color-error);">¿Estás completamente seguro?</h2>
+    </div>
+    <div class="card-body">
+        <p style="font-size: 1.1rem; margin-bottom: var(--espaciado-md);">
+            Estás a punto de eliminar permanentemente el material <strong>"{{ material.nombre }}"</strong> del catálogo global.
+        </p>
+
+        <form method="POST" action="{{ url_for('materiales.eliminar_material', id=material.id) }}">
+            <div class="form-actions">
+                <a href="{{ url_for('materiales.listado_materiales') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-error">
+                    <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm mr-xs">
+                    Sí, Eliminar Material
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

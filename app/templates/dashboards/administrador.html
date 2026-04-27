@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Administrador - APROMAN{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/ajustes.png') }}" alt="Dashboard" class="icon-lg icon-align-middle mr-sm">
+        Panel de Administración
+    </h1>
+    <p class="dashboard-subtitle">Control total del sistema APROMAN</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/lineas-de-calendario.png') }}" alt="Proyectos" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Proyectos</div>
+            <div class="stat-value">{{ total_proyectos }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/boligrafo-calendario.png') }}" alt="Pendientes" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Pendientes</div>
+            <div class="stat-value">{{ total_pendientes }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/consultar-calendario.png') }}" alt="Activos" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Activos</div>
+            <div class="stat-value">{{ total_activos }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/consultar-calendario.png') }}" alt="Completados" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Completados</div>
+            <div class="stat-value">{{ total_completados }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/calendario-reloj.png') }}" alt="Agentes" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Agentes</div>
+            <div class="stat-value">{{ total_agentes or '---' }}</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon accent">
+            <img src="{{ url_for('static', filename='img/icons/calendario-reloj.png') }}" alt="Sistemas" class="icon-lg">
+        </div>
+        <div class="stat-info">
+            <div class="stat-label">Sistemas</div>
+            <div class="stat-value">{{ total_sistemas or '---' }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-sections-stack mb-lg">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <img src="{{ url_for('static', filename='img/icons/carpeta.png') }}" alt="Proyectos" class="icon-md icon-align-middle mr-sm">
+                Proyectos Recientes
+            </h2>
+        </div>
+        <div class="card-body">
+            {% if proyectos_recientes %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Cliente</th>
+                            <th>Agente</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for proyecto in proyectos_recientes %}
+                        <tr>
+                            <td><strong>{{ proyecto.codigo }}</strong></td>
+                            <td>{{ proyecto.cliente_nombre }}</td>
+                            <td>{{ proyecto.agente_nombre or proyecto.username or 'Sin asignar' }}</td>
+                            <td><span class="badge badge-{{ proyecto.estado }}">{{ proyecto.estado|capitalize }}</span></td>
+                            <td class="nowrap">
+                                <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
+                                    <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" class="icon-sm" alt="Ver">
+                                    Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mobile-card-view">
+                {% for proyecto in proyectos_recientes %}
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <strong>{{ proyecto.codigo }}</strong>
+                        <span class="badge badge-{{ proyecto.estado }}">{{ proyecto.estado|capitalize }}</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-card-row">
+                            <span class="mobile-card-label">Cliente:</span>
+                            <span class="mobile-card-value">{{ proyecto.cliente_nombre }}</span>
+                        </div>
+                        <div class="mobile-card-row">
+                            <span class="mobile-card-label">Agente:</span>
+                            <span class="mobile-card-value">{{ proyecto.agente_nombre or proyecto.username or '---' }}</span>
+                        </div>
+                        <div class="mobile-card-row">
+                            <span class="mobile-card-label">Fecha:</span>
+                            <span class="mobile-card-value">{{ proyecto.fecha_formateada }}</span>
+                        </div>
+                    </div>
+                    <div class="mobile-card-actions">
+                        <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
+                            <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" class="icon-sm" alt="Ver detalle">
+                            Ver Detalle
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center p-lg text-gray-500">
+                <p>No hay proyectos registrados aún.</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-lg text-center">
+                <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/aplicaciones-blanco.png') }}" class="icon-sm" alt="Todos los proyectos">
+                    Ver Todos los Proyectos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if agentes_ranking %}
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Agentes" class="icon-md icon-align-middle mr-sm">
+                Ranking de Agentes
+            </h2>
+            <p class="card-subtitle">Proyectos asignados por agente</p>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Username</th>
+                            <th>Nombre</th>
+                            <th class="text-center">Proyectos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agente in agentes_ranking %}
+                        <tr>
+                            <td><strong>{{ agente.id }}</strong></td>
+                            <td>{{ agente.username or '---' }}</td>
+                            <td>{{ agente.nombre or agente.username or '---' }}</td>
+                            <td class="text-center">
+                                <span class="badge badge-activo">{{ agente.total }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mobile-card-view">
+                {% for agente in agentes_ranking %}
+                <div class="mobile-card">
+                    <div class="mobile-card-header">
+                        <div class="mobile-card-title">{{ agente.nombre or agente.username or 'Sin nombre' }}</div>
+                        <span class="badge badge-activo">{{ agente.total }} proy.</span>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-card-row">
+                            <span class="mobile-card-label">Código:</span>
+                            <span class="mobile-card-value">{{ agente.id }}</span>
+                        </div>
+                        <div class="mobile-card-row">
+                            <span class="mobile-card-label">Username:</span>
+                            <span class="mobile-card-value">{{ agente.username or '---' }}</span>
+                        </div>
+                        <div class="mobile-card-row">
+                            <span class="mobile-card-label">Nombre:</span>
+                            <span class="mobile-card-value">{{ agente.nombre or agente.username or '---' }}</span>
+                        </div>
+                        <div class="mobile-card-row">
+                            <span class="mobile-card-label">Proyectos:</span>
+                            <span class="mobile-card-value"><strong>{{ agente.total }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

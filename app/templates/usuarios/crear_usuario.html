@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Nuevo Usuario - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/agregar.png') }}" alt="Nuevo" class="icon-lg">
+        Registrar Nuevo Usuario
+    </h1>
+    <p class="dashboard-subtitle">Completa los datos para habilitar una nueva cuenta de acceso al sistema.</p>
+</div>
+
+<div class="card card-form-container">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('usuarios.crear_usuario') }}" id="formUsuario">
+            
+            <div class="form-grid">
+                <!-- Nombre y Username -->
+                <div class="div-form-group">
+                    <label class="label-required" for="nombre">Nombre Completo</label>
+                    <input type="text" id="nombre" name="nombre" class="input-text" required maxlength="150" placeholder="Ej. Juan Pérez">
+                </div>
+                
+                <div class="div-form-group">
+                    <label class="label-required" for="username">Nombre de Usuario</label>
+                    <input type="text" id="username" name="username" class="input-text" required maxlength="50" placeholder="Ej. jperez (sin espacios)" pattern="^\S+$" title="El nombre de usuario no debe contener espacios en blanco">
+                </div>
+
+                <!-- Correo y Rol -->
+                <div class="div-form-group">
+                    <label class="label-normal" for="email">Correo Electrónico (Opcional)</label>
+                    <input type="email" id="email" name="email" class="input-text" maxlength="100" placeholder="usuario@empresa.com">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required" for="rol">Rol del Usuario</label>
+                    <select id="rol" name="rol" class="form-control" required>
+                        <option value="agente" selected>Agente Evaluador</option>
+                        <option value="administrador">Administrador</option>
+                    </select>
+                </div>
+
+                <!-- Contraseña -->
+                <div class="div-form-group">
+                    <label class="label-required" for="password">Contraseña de Acceso</label>
+                    <input type="password" id="password" name="password" class="input-text" required minlength="4">
+                </div>
+                
+                <div class="div-form-group">
+                    <label class="label-required" for="password_confirm">Confirmar Contraseña</label>
+                    <input type="password" id="password_confirm" name="password_confirm" class="input-text" required minlength="4">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-normal">
+                        <input type="checkbox" name="puede_ver_costos" value="1">
+                        Puede ver costos en PDF
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('usuarios.listado_usuarios') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Proyectos - APROMAN{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/aplicaciones.png') }}" alt="Proyectos" class="icon-lg">
+        Listado de Proyectos
+    </h1>
+    {% if current_user.rol == 'administrador' %}
+    <a href="{{ url_for('proyectos.crear_proyecto') }}" class="btn btn-primary">
+        <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Nuevo" class="icon-sm">
+        Nuevo Proyecto
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filtros -->
+<form method="GET" class="card mb-lg">
+    <div class="card-body">
+        <div class="flex gap-sm flex-wrap mb-sm">
+            <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar por código o cliente..."
+                class="input-text flex-1 min-w-200">
+            <button type="submit" class="btn btn-secondary">
+                <img src="{{ url_for('static', filename='img/icons/busqueda.png') }}" alt="Buscar" class="icon-sm">
+                Buscar
+            </button>
+            <button type="button" class="btn btn-outline" id="toggle-project-filters" aria-expanded="{% if estado or fecha_desde or fecha_hasta %}true{% else %}false{% endif %}">
+                Filtros
+            </button>
+            {% if busqueda or estado or fecha_desde or fecha_hasta %}
+            <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-outline">Limpiar</a>
+            {% endif %}
+        </div>
+
+        <div id="project-advanced-filters" class="{% if not (estado or fecha_desde or fecha_hasta) %}hidden{% endif %}">
+            <div class="grid grid-auto-fit gap-sm">
+                <select name="estado" class="input-text">
+                    <option value="">Todos los estados</option>
+                    <option value="pendiente" {% if estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                    <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="completado" {% if estado == 'completado' %}selected{% endif %}>Completado</option>
+                    <option value="cancelado" {% if estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+
+                <input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="input-text" title="Fecha desde">
+                <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="input-text" title="Fecha hasta">
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Card: Listado -->
+<div class="card">
+    <div class="card-body p-0">
+
+        <!-- Vista Desktop: Tabla -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        {% if current_user.rol == 'administrador' %}
+                        <th>Agente</th>
+                        {% endif %}
+                        <th style="width:90px;" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proyecto in proyectos %}
+                    <tr>
+                        <td><strong>{{ proyecto.codigo }}</strong></td>
+                        <td>{{ proyecto.cliente_nombre or '---' }}</td>
+                        <td><span class="badge badge-{{ proyecto.estado }}">{{ proyecto.estado|upper }}</span></td>
+                        <td>{{ proyecto.fecha_creacion.strftime('%Y-%m-%d') if proyecto.fecha_creacion else '---' }}</td>
+                        {% if current_user.rol == 'administrador' %}
+                        <td>{{ proyecto.agente_nombre or proyecto.username or '---' }}</td>
+                        {% endif %}
+                        <td class="text-center">
+                            <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
+                                <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Ver" class="icon-sm">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{% if current_user.rol == 'administrador' %}6{% else %}5{% endif %}"
+                            class="text-center p-lg text-gray-500">
+                            No se encontraron proyectos.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Vista Mobile: Cards -->
+        <div class="mobile-card-view">
+            {% for proyecto in proyectos %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <strong>{{ proyecto.codigo }}</strong>
+                    <span class="badge badge-{{ proyecto.estado }}">{{ proyecto.estado|upper }}</span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Cliente:</span>
+                        <span class="mobile-card-value">{{ proyecto.cliente_nombre or '---' }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Fecha:</span>
+                        <span class="mobile-card-value">{{ proyecto.fecha_creacion.strftime('%Y-%m-%d') if proyecto.fecha_creacion else '---' }}</span>
+                    </div>
+                    {% if current_user.rol == 'administrador' %}
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Agente:</span>
+                        <span class="mobile-card-value">{{ proyecto.agente_nombre or proyecto.username or '---' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="mobile-card-actions">
+                    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
+                        <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Ver" class="icon-sm">
+                        Ver Detalle
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center p-lg text-gray-500">
+                No se encontraron proyectos.
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleButton = document.getElementById('toggle-project-filters');
+        const filtersPanel = document.getElementById('project-advanced-filters');
+
+        if (!toggleButton || !filtersPanel) return;
+
+        toggleButton.addEventListener('click', function () {
+            const isHidden = filtersPanel.classList.toggle('hidden');
+            toggleButton.setAttribute('aria-expanded', String(!isHidden));
+        });
+    });
+</script>
+{% endblock %}

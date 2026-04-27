@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Editar Material - AproMan{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-lg icon-align-middle mr-sm">
+        Editar Material: {{ material.nombre }}
+    </h1>
+    <p class="dashboard-subtitle">Modifica la información de este material catalogado.</p>
+</div>
+
+<!-- Navegación -->
+<div style="margin-bottom: var(--espaciado-lg);">
+    <a href="{{ url_for('materiales.listado_materiales') }}" class="btn btn-outline">
+        ← Volver al Catálogo
+    </a>
+</div>
+
+<!-- Card: Formulario -->
+<div class="card card-form" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 class="card-title">Datos del Material</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('materiales.editar_material', id=material.id) }}">
+            <div class="div-form-group">
+                <label class="label-required">Nombre del Material *</label>
+                <input type="text" name="nombre" class="input-text" required value="{{ material.nombre }}">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" class="icon-sm mr-xs">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
