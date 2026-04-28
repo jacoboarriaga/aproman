@@ -38,6 +38,12 @@ def create_app():
     from .controllers.proyectos import proyectos_bp
     app.register_blueprint(proyectos_bp)
 
+    from .controllers.inventario import inventario_bp
+    app.register_blueprint(inventario_bp)
+
+    from .controllers.solicitudes import solicitudes_bp
+    app.register_blueprint(solicitudes_bp)
+
     from .controllers.materiales import materiales_bp
     app.register_blueprint(materiales_bp)
 

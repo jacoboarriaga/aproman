@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Confirmar Recibido - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/comprobacion-del-portapapeles.png') }}" alt="Recibir" class="icon-lg">
+        Confirmar Recibido
+    </h1>
+    <p class="dashboard-subtitle">
+        Solicitud #{{ solicitud.id }} &mdash; Bodega: <strong>{{ solicitud.bodega_destino }}</strong>
+    </p>
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('solicitudes.listado_solicitudes') }}" class="btn btn-outline btn-icon-back">Volver a Solicitudes</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('solicitudes.confirmar_solicitud', id=solicitud.id) }}">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Solicitado</th>
+                            <th>Ya recibido</th>
+                            <th>Recibir ahora</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in detalles %}
+                        {% set pendiente = d.cantidad_solicitada - d.cantidad_recibida %}
+                        <tr>
+                            <td>
+                                <strong>{{ d.producto_nombre }}</strong><br>
+                                <small class="text-gray-500">{{ d.cod_producto_erp or '---' }} / {{ d.unidad_medida }}</small>
+                                <input type="hidden" name="detalle_id[]" value="{{ d.id }}">
+                            </td>
+                            <td>{{ "{:,.2f}".format(d.cantidad_solicitada) }}</td>
+                            <td>{{ "{:,.2f}".format(d.cantidad_recibida) }}</td>
+                            <td>
+                                <input class="input-text numeric-input" type="number" name="cantidad_recibida[]" step="0.0001" min="0" max="{{ pendiente }}" value="{{ pendiente if pendiente > 0 else 0 }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-icon-save">Confirmar Recibido</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

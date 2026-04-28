@@ -11,6 +11,10 @@
     <p class="dashboard-subtitle">Completa los datos para habilitar una nueva cuenta de acceso al sistema.</p>
 </div>
 
+<div class="page-actions">
+    <a href="{{ url_for('usuarios.listado_usuarios') }}" class="btn btn-outline btn-icon-back">Volver a Usuarios</a>
+</div>
+
 <div class="card card-form-container">
     <div class="card-body">
         <form method="POST" action="{{ url_for('usuarios.crear_usuario') }}" id="formUsuario">
@@ -62,7 +66,7 @@
 
             <div class="form-actions">
                 <a href="{{ url_for('usuarios.listado_usuarios') }}" class="btn btn-outline">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+                <button type="submit" class="btn btn-primary btn-icon-save">Guardar Usuario</button>
             </div>
         </form>
     </div>

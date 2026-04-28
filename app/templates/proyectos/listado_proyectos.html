@@ -9,13 +9,15 @@
         <img src="{{ url_for('static', filename='img/icons/aplicaciones.png') }}" alt="Proyectos" class="icon-lg">
         Listado de Proyectos
     </h1>
-    {% if current_user.rol == 'administrador' %}
-    <a href="{{ url_for('proyectos.crear_proyecto') }}" class="btn btn-primary">
-        <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Nuevo" class="icon-sm">
+</div>
+
+{% if current_user.rol == 'administrador' %}
+<div class="page-actions">
+    <a href="{{ url_for('proyectos.crear_proyecto') }}" class="btn btn-primary btn-icon-add">
         Nuevo Proyecto
     </a>
-    {% endif %}
 </div>
+{% endif %}
 
 <!-- Filtros -->
 <form method="GET" class="card mb-lg">
@@ -23,8 +25,7 @@
         <div class="flex gap-sm flex-wrap mb-sm">
             <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar por código o cliente..."
                 class="input-text flex-1 min-w-200">
-            <button type="submit" class="btn btn-secondary">
-                <img src="{{ url_for('static', filename='img/icons/busqueda.png') }}" alt="Buscar" class="icon-sm">
+            <button type="submit" class="btn btn-secondary btn-icon-view">
                 Buscar
             </button>
             <button type="button" class="btn btn-outline" id="toggle-project-filters" aria-expanded="{% if estado or fecha_desde or fecha_hasta %}true{% else %}false{% endif %}">
@@ -68,7 +69,7 @@
                         {% if current_user.rol == 'administrador' %}
                         <th>Agente</th>
                         {% endif %}
-                        <th style="width:90px;" class="text-center">Acciones</th>
+                        <th class="w-20 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -82,8 +83,7 @@
                         <td>{{ proyecto.agente_nombre or proyecto.username or '---' }}</td>
                         {% endif %}
                         <td class="text-center">
-                            <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
-                                <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Ver" class="icon-sm">
+                            <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary btn-icon-view">
                                 Ver
                             </a>
                         </td>
@@ -125,8 +125,7 @@
                     {% endif %}
                 </div>
                 <div class="mobile-card-actions">
-                    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary">
-                        <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Ver" class="icon-sm">
+                    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-small btn-primary btn-icon-view">
                         Ver Detalle
                     </a>
                 </div>

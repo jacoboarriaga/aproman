@@ -1,7 +1,7 @@
 <aside class="sidebar">
+    {% set inventory_active = current_user.rol == 'administrador' and ('inventario' in request.path or 'solicitudes' in request.path) %}
     {% set settings_active = current_user.rol == 'administrador' and (
         ('pintores' in request.path and 'sistemas' not in request.path) or
-        ('materiales' in request.path and 'sistemas' not in request.path) or
         ('usuarios' in request.path and 'dashboard' not in request.path)
     ) %}
     <div class="sidebar-header">
@@ -35,20 +35,63 @@
                 <span class="sidebar-label">Proyectos</span>
             </a>
         </li>
-    </nav>
 
-    {% if current_user.rol == 'administrador' %}
-    <nav class="sidebar-admin-menu">
-            <details class="sidebar-details sidebar-admin-details" {{ 'open' if settings_active }}>
-                <summary class="sidebar-menu-link sidebar-menu-toggle {{ 'active' if settings_active }}">
+        {% if current_user.rol == 'administrador' %}
+        <li class="sidebar-menu-item">
+            <details class="sidebar-details" {{ 'open' if inventory_active }}>
+                <summary class="sidebar-menu-link sidebar-menu-toggle {{ 'active' if inventory_active }}">
                     <span class="sidebar-menu-icon">
-                        <img src="{{ url_for('static', filename='img/icons/ajustes.png') }}" class="icon-md sidebar-settings-icon" alt="Ajustes">
+                        <img src="{{ url_for('static', filename='img/icons/caja-alt' + ('-blanco' if inventory_active else '') + '.png') }}" class="icon-md" alt="Inventario">
                     </span>
-                    <span class="sidebar-label">Administracion</span>
+                    <span class="sidebar-label">Inventario</span>
                     <span class="sidebar-menu-caret" aria-hidden="true"></span>
                 </summary>
 
-                <ul class="sidebar-submenu sidebar-admin-submenu">
+                <ul class="sidebar-submenu">
+                    <li class="sidebar-submenu-item">
+                        <a href="{{ url_for('inventario.listado_inventario') }}"
+                            class="sidebar-submenu-link {{ 'active' if request.endpoint == 'inventario.listado_inventario' }}">
+                            <span class="sidebar-menu-icon">
+                                <img src="{{ url_for('static', filename='img/icons/cajas.png') }}" class="icon-md" alt="Existencias">
+                            </span>
+                            <span class="sidebar-label">Existencias</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-submenu-item">
+                        <a href="{{ url_for('inventario.movimientos_inventario') }}"
+                            class="sidebar-submenu-link {{ 'active' if request.endpoint == 'inventario.movimientos_inventario' }}">
+                            <span class="sidebar-menu-icon">
+                                <img src="{{ url_for('static', filename='img/icons/historial.png') }}" class="icon-md" alt="Movimientos">
+                            </span>
+                            <span class="sidebar-label">Movimientos</span>
+                        </a>
+                    </li>
+                    <li class="sidebar-submenu-item">
+                        <a href="{{ url_for('solicitudes.listado_solicitudes') }}"
+                            class="sidebar-submenu-link {{ 'active' if 'solicitudes' in request.path }}">
+                            <span class="sidebar-menu-icon">
+                                <img src="{{ url_for('static', filename='img/icons/comprobacion-del-portapapeles.png') }}" class="icon-md" alt="Solicitudes">
+                            </span>
+                            <span class="sidebar-label">Solicitudes</span>
+                        </a>
+                    </li>
+                </ul>
+            </details>
+        </li>
+        {% endif %}
+
+        {% if current_user.rol == 'administrador' %}
+        <li class="sidebar-menu-item">
+            <details class="sidebar-details" {{ 'open' if settings_active }}>
+                <summary class="sidebar-menu-link sidebar-menu-toggle {{ 'active' if settings_active }}">
+                    <span class="sidebar-menu-icon">
+                        <img src="{{ url_for('static', filename='img/icons/ajustes-deslizadores' + ('-blanco' if settings_active else '') + '.png') }}" class="icon-md sidebar-settings-icon" alt="Ajustes">
+                    </span>
+                    <span class="sidebar-label">Administración</span>
+                    <span class="sidebar-menu-caret" aria-hidden="true"></span>
+                </summary>
+
+                <ul class="sidebar-submenu">
                     <li class="sidebar-submenu-item">
                         <a href="{{ url_for('pintores.listado_pintores') }}"
                             class="sidebar-submenu-link {{ 'active' if 'pintores' in request.path and 'sistemas' not in request.path }}">
@@ -56,16 +99,6 @@
                                 <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" class="icon-md" alt="Pintores">
                             </span>
                             <span class="sidebar-label">Pintores</span>
-                        </a>
-                    </li>
-
-                    <li class="sidebar-submenu-item">
-                        <a href="{{ url_for('materiales.listado_materiales') }}"
-                            class="sidebar-submenu-link {{ 'active' if 'materiales' in request.path and 'sistemas' not in request.path }}">
-                            <span class="sidebar-menu-icon">
-                                <img src="{{ url_for('static', filename='img/icons/tools.png') }}" class="icon-md" alt="Materiales">
-                            </span>
-                            <span class="sidebar-label">Materiales</span>
                         </a>
                     </li>
 
@@ -82,8 +115,9 @@
                     {% endif %}
                 </ul>
             </details>
+        </li>
+        {% endif %}
     </nav>
-    {% endif %}
 
     <div class="sidebar-footer">
         <div class="sidebar-user">
@@ -93,6 +127,6 @@
                 <span class="sidebar-user-role">{{ current_user.rol|capitalize }}</span>
             </div>
         </div>
-        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary w-100 mt-sm">Cerrar Sesion</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary w-100 mt-sm">Cerrar Sesión</a>
     </div>
 </aside>

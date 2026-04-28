@@ -7,8 +7,10 @@
         <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" class="icon-lg">
         Catalogo de Pintores
     </h1>
-    <a href="{{ url_for('pintores.crear_pintor') }}" class="btn btn-primary">
-        <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" class="icon-sm">
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('pintores.crear_pintor') }}" class="btn btn-primary btn-icon-add">
         Registrar Nuevo Pintor
     </a>
 </div>
@@ -22,10 +24,10 @@
             <table class="table">
                 <thead>
                     <tr>
-                        <th style="width: 96px;">Codigo</th>
+                        <th class="w-20">Codigo</th>
                         <th>Nombre</th>
                         <th>Fecha de Registro</th>
-                        <th style="width: 200px; text-align: center;">Acciones</th>
+                        <th class="col-actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,20 +36,18 @@
                         <td><strong>{{ p.id }}</strong></td>
                         <td><strong>{{ p.nombre }}</strong></td>
                         <td>{{ p.fecha_formateada }}</td>
-                        <td style="text-align: center; white-space: nowrap;">
-                            <a href="{{ url_for('pintores.editar_pintor', id=p.id) }}" class="btn btn-small btn-secondary">
-                                <img src="{{ url_for('static', filename='img/icons/editar.png') }}" class="icon-sm">
+                        <td class="cell-actions">
+                            <a href="{{ url_for('pintores.editar_pintor', id=p.id) }}" class="btn btn-small btn-secondary btn-icon-edit">
                                 Editar
                             </a>
-                            <a href="{{ url_for('pintores.eliminar_pintor', id=p.id) }}" class="btn btn-small btn-error">
-                                <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm">
+                            <a href="{{ url_for('pintores.eliminar_pintor', id=p.id) }}" class="btn btn-small btn-error btn-icon-delete">
                                 Eliminar
                             </a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 20px; color: var(--color-texto-claro);">
+                        <td colspan="4" class="text-center p-lg text-gray-500">
                             No hay pintores registrados.
                         </td>
                     </tr>
@@ -77,12 +77,10 @@
                     </div>
                 </div>
                 <div class="mobile-card-actions">
-                    <a href="{{ url_for('pintores.editar_pintor', id=p.id) }}" class="btn btn-small btn-secondary">
-                        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" class="icon-sm">
+                    <a href="{{ url_for('pintores.editar_pintor', id=p.id) }}" class="btn btn-small btn-secondary btn-icon-edit">
                         Editar
                     </a>
-                    <a href="{{ url_for('pintores.eliminar_pintor', id=p.id) }}" class="btn btn-small btn-error">
-                        <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm">
+                    <a href="{{ url_for('pintores.eliminar_pintor', id=p.id) }}" class="btn btn-small btn-error btn-icon-delete">
                         Eliminar
                     </a>
                 </div>

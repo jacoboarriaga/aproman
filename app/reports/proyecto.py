@@ -244,9 +244,9 @@ def _build_indicadores(sis, uw, S):
 
 
 def _build_materiales(mats, uw, S):
-    story = [Paragraph("Materiales Utilizados", S["subsec"])]
+    story = [Paragraph("Gastos Variables", S["subsec"])]
     if not mats:
-        return story + [Paragraph("Sin materiales registrados.", S["empty"]), Spacer(1, 3)]
+        return story + [Paragraph("Sin gastos registrados.", S["empty"]), Spacer(1, 3)]
 
     def fm(v):
         try:

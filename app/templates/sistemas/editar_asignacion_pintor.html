@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Editar Asignación - AproMan{% endblock %}
+{% block title %}Editar Asignacion - AproMan{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
@@ -13,29 +13,28 @@
     </p>
 </div>
 
-<div style="margin-bottom: var(--espaciado-lg); display: flex; gap: var(--espaciado-sm); flex-wrap: wrap;">
-    <a href="{{ url_for('sistemas.ver_sistema', id=asignacion.sistema_id) }}" class="btn btn-outline">
-        ← Volver al Sistema
+<div class="page-actions">
+    <a href="{{ url_for('sistemas.ver_sistema', id=asignacion.sistema_id) }}" class="btn btn-outline btn-icon-back">
+        Volver al Sistema
     </a>
 </div>
 
-<div class="card card-form" style="max-width: 800px; margin: 0 auto;">
+<div class="card card-form">
     <div class="card-body">
         <form method="POST" action="{{ url_for('sistemas.editar_asignacion_pintor', id=asignacion.id) }}">
 
             <div class="form-grid">
 
                 <div class="div-form-group">
-                    <label class="label-required">Pago por Día ($) *</label>
+                    <label class="label-required">Pago por Dia ($) *</label>
                     <input class="input-text numeric-input" type="number" step="0.01" min="0" name="pago_dia"
                         id="pago_dia" required value="{{ '%0.2f'|format(asignacion.pago_dia|float) }}">
                 </div>
 
                 <div class="div-form-group">
-                    <label>Días Seleccionados</label>
-                    <input class="input-text" type="text" id="dias_display" readonly
-                        style="background-color: #f3f4f6; font-weight: bold; font-size: 1.1rem; border: 2px solid var(--color-borde); text-align: center;"
-                        value="{{ asignacion.dias_trabajados|int }} días">
+                    <label>Dias Seleccionados</label>
+                    <input class="input-text input-summary input-summary-center" type="text" id="dias_display" readonly
+                        value="{{ asignacion.dias_trabajados|int }} dias">
                     <input type="hidden" name="dias_trabajados" id="dias_trabajados"
                         value="{{ asignacion.dias_trabajados|int }}">
                     <input type="hidden" name="fechas_especificas" id="fechas_especificas"
@@ -43,53 +42,36 @@
                 </div>
 
                 <!-- Calendario -->
-                <div class="div-form-group" style="grid-column: 1 / -1;">
+                <div class="div-form-group grid-column-full">
                     <label class="label-required">Fechas de Trabajo Asignadas *</label>
-                    <div id="calendario-container"
-                        style="border: 1px solid var(--color-borde); border-radius: 8px; overflow: hidden; user-select: none;">
-                        <div id="calendario-nav"
-                            style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--color-principal); color: white;">
-                            <button type="button" id="btn-prev"
-                                style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 4px 8px;">◀</button>
-                            <span id="calendario-titulo" style="font-weight: bold; font-size: 1rem;"></span>
-                            <button type="button" id="btn-next"
-                                style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 4px 8px;">▶</button>
+                    <div id="calendario-container" class="calendar-picker">
+                        <div id="calendario-nav" class="calendar-picker-header">
+                            <button type="button" id="btn-prev" class="calendar-nav-btn">&lt;</button>
+                            <span id="calendario-titulo" class="calendar-picker-title"></span>
+                            <button type="button" id="btn-next" class="calendar-nav-btn">&gt;</button>
                         </div>
-                        <div id="calendario-dias-semana"
-                            style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.8rem; color: var(--color-texto-claro); padding: 8px 0; border-bottom: 1px solid var(--color-borde);">
-                            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+                        <div id="calendario-dias-semana" class="calendar-weekdays">
+                            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span>
                         </div>
-                        <div id="calendario-grid"
-                            style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 8px;"></div>
+                        <div id="calendario-grid" class="calendar-grid"></div>
                     </div>
-                    <small style="color: var(--color-texto-claro); margin-top: 6px; display: block;">Haz clic en los
-                        días para seleccionarlos o deseleccionarlos.</small>
+                    <small class="calendar-help">Haz clic en los
+                        dias para seleccionarlos o deseleccionarlos.</small>
                 </div>
 
-                <div class="div-form-group" style="grid-column: 1 / -1; margin-top:10px;">
+                <div class="div-form-group grid-column-full">
                     <label>Costo Total a Pagar ($)</label>
-                    <input class="input-text" type="text" id="costo_total" readonly
-                        style="background-color: #f3f4f6; color: var(--color-texto); font-weight: bold; font-size: 1.1rem; border: 2px solid var(--color-borde);"
+                    <input class="input-text input-summary" type="text" id="costo_total" readonly
                         value="${{ '%0.2f'|format(asignacion.costo_total|float) }}">
                 </div>
             </div>
 
-            <div class="form-actions"
-                style="margin-top: var(--espaciado-lg); display: flex; justify-content: flex-end;">
-
-                <div style="flex-grow: 1;"></div>
-
-                <button type="submit" name="accion" value="eliminar" class="btn btn-error"
-                    onclick="return confirm('Estas seguro de que deseas retirar a este pintor del sistema?');"
-                    style="margin-right: 10px;">
-                    <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}"
-                        class="icon-sm mr-xs">
+            <div class="form-actions">
+                <button type="submit" name="accion" value="eliminar" class="btn btn-error btn-icon-delete" onclick="return confirm('Estas seguro de que deseas retirar a este pintor del sistema?');">
                     Retirar Pintor
                 </button>
 
-                <button type="submit" name="accion" value="guardar" class="btn btn-primary">
-                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}"
-                        class="icon-sm mr-xs">
+                <button type="submit" name="accion" value="guardar" class="btn btn-primary btn-icon-save">
                     Guardar Cambios
                 </button>
             </div>
@@ -158,27 +140,13 @@
                 const btn = document.createElement('div');
                 btn.textContent = d;
                 btn.dataset.date = dateStr;
-                btn.style.cssText = 'padding: 10px 4px; text-align: center; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.15s ease;';
+                btn.className = 'calendar-day';
 
                 if (selectedDates.has(dateStr)) {
-                    btn.style.background = 'var(--color-principal)';
-                    btn.style.color = 'white';
-                    btn.style.fontWeight = 'bold';
+                    btn.classList.add('calendar-day-selected');
                 } else {
-                    btn.style.background = 'var(--color-fondo)';
-                    btn.style.color = 'var(--color-texto)';
+                    btn.classList.add('calendar-day-available');
                 }
-
-                btn.addEventListener('mouseenter', function () {
-                    if (!selectedDates.has(dateStr)) {
-                        btn.style.background = '#e0e7ff';
-                    }
-                });
-                btn.addEventListener('mouseleave', function () {
-                    if (!selectedDates.has(dateStr)) {
-                        btn.style.background = 'var(--color-fondo)';
-                    }
-                });
 
                 btn.addEventListener('click', function () {
                     if (selectedDates.has(dateStr)) {
@@ -196,7 +164,7 @@
 
         function actualizarCampos() {
             const count = selectedDates.size;
-            diasDisplay.value = count + (count === 1 ? ' día' : ' días');
+            diasDisplay.value = count + (count === 1 ? ' dia' : ' dias');
             diasHidden.value = count;
 
             const sorted = Array.from(selectedDates).sort();
@@ -231,3 +199,4 @@
     });
 </script>
 {% endblock %}
+

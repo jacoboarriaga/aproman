@@ -11,6 +11,10 @@
     <p class="dashboard-subtitle">Modificando los atributos o los accesos de credenciales de la cuenta.</p>
 </div>
 
+<div class="page-actions">
+    <a href="{{ url_for('usuarios.listado_usuarios') }}" class="btn btn-outline btn-icon-back">Volver a Usuarios</a>
+</div>
+
 <div class="card card-form-container">
     <div class="card-body">
         <form method="POST" action="{{ url_for('usuarios.editar_usuario', id=usuario.id) }}" id="formUsuarioEdit">
@@ -69,7 +73,7 @@
 
             <div class="form-actions">
                 <a href="{{ url_for('usuarios.listado_usuarios') }}" class="btn btn-outline">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Actualizar Cambios</button>
+                <button type="submit" class="btn btn-primary btn-icon-save">Actualizar Cambios</button>
             </div>
         </form>
     </div>

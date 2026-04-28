@@ -7,7 +7,7 @@
 <div class="dashboard-header">
     <h1 class="dashboard-title">
         <img src="{{ url_for('static', filename='img/icons/carpeta.png') }}" alt="Proyecto" class="icon-lg">
-        {{ proyecto.codigo }} — {{ proyecto.cliente_nombre }}
+        {{ proyecto.codigo }} - {{ proyecto.cliente_nombre }}
     </h1>
     <p class="dashboard-subtitle">
         <span class="badge badge-{{ proyecto.estado }}">{{ proyecto.estado|upper }}</span>
@@ -21,22 +21,19 @@
 </div>
 
 <!-- Barra de Acciones -->
-<div class="mb-lg flex gap-sm flex-wrap items-center">
-    <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-outline">
-        <img src="{{ url_for('static', filename='img/icons/carpeta-abierta.png') }}" alt="Volver" class="icon-sm">
+<div class="page-actions">
+    <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-outline btn-icon-back">
         Volver
     </a>
 
     {% if current_user.rol == 'administrador' %}
-    <a href="{{ url_for('proyectos.editar_proyecto', pk=proyecto.id) }}" class="btn btn-secondary">
-        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+    <a href="{{ url_for('proyectos.editar_proyecto', pk=proyecto.id) }}" class="btn btn-secondary btn-icon-edit">
         Editar
     </a>
     {% endif %}
 
     {% if todos_sistemas_completados %}
-    <a href="{{ url_for('proyectos.generar_pdf_proyecto', pk=proyecto.id) }}" class="btn btn-primary" target="_blank">
-        <img src="{{ url_for('static', filename='img/icons/file-download.png') }}" alt="PDF" class="icon-sm">
+    <a href="{{ url_for('proyectos.generar_pdf_proyecto', pk=proyecto.id) }}" class="btn btn-primary btn-icon-report" target="_blank">
         Reporte
     </a>
     {% endif %}
@@ -44,25 +41,21 @@
     {% if current_user.rol == 'administrador' %}
     <form method="POST" action="{{ url_for('proyectos.cambiar_estado', pk=proyecto.id) }}" class="inline">
         {% if proyecto.estado == 'pendiente' %}
-        <button type="submit" class="btn btn-secondary">
-            <img src="{{ url_for('static', filename='img/icons/boligrafo-calendario.png') }}" alt="Activar" class="icon-sm">
+        <button type="submit" class="btn btn-secondary btn-icon-activate">
             Activar
         </button>
         {% elif proyecto.estado == 'activo' %}
-        <button type="submit" class="btn btn-secondary">
-            <img src="{{ url_for('static', filename='img/icons/consultar-calendario.png') }}" alt="Completar" class="icon-sm">
+        <button type="submit" class="btn btn-secondary btn-icon-complete">
             Completar
         </button>
         {% elif proyecto.estado == 'completado' %}
-        <button type="submit" class="btn btn-secondary">
-            <img src="{{ url_for('static', filename='img/icons/calendario-reloj.png') }}" alt="Reabrir" class="icon-sm">
+        <button type="submit" class="btn btn-secondary btn-icon-reopen">
             Reabrir
         </button>
         {% endif %}
     </form>
 
-    <a href="{{ url_for('proyectos.eliminar_proyecto', pk=proyecto.id) }}" class="btn btn-error">
-        <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" alt="Eliminar" class="icon-sm">
+    <a href="{{ url_for('proyectos.eliminar_proyecto', pk=proyecto.id) }}" class="btn btn-error btn-icon-delete">
         Eliminar
     </a>
     {% endif %}
@@ -74,67 +67,72 @@
         <div class="card-header">
             <h2 class="card-title">
                 <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Cliente" class="icon-md">
-                Información del Cliente
+                Informacion del Cliente
             </h2>
         </div>
         <div class="card-body">
-            <table class="w-100 table-fixed">
-                <tr class="border-b">
-                    <td class="info-label">Código</td>
-                    <td class="info-value">
-                        {% if proyecto.cod_cliente %}
-                        <span class="badge badge-pendiente">#{{ proyecto.cod_cliente }}</span>
-                        {% else %}
-                        <span class="text-gray-500">---</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr class="border-b">
-                    <td class="info-label">Nombre</td>
-                    <td class="info-value"><strong>{{ proyecto.cliente_nombre or '---' }}</strong></td>
-                </tr>
-                <tr class="border-b">
-                    <td class="info-label">DUI / NIT</td>
-                    <td class="info-value">{{ proyecto.cliente_dui_nit or '---' }}</td>
-                </tr>
-                <tr class="border-b">
-                    <td class="info-label">NRC</td>
-                    <td class="info-value">{{ proyecto.cliente_nrc or '---' }}</td>
-                </tr>
-                <tr class="border-b">
-                    <td class="info-label">Teléfono</td>
-                    <td class="info-value">{{ proyecto.cliente_telefono or '---' }}</td>
-                </tr>
-                <tr class="border-b">
-                    <td class="info-label">Email</td>
-                    <td class="info-value">{{ proyecto.cliente_email or 'No proporcionado' }}</td>
-                </tr>
-                <tr class="border-b">
-                    <td class="info-label v-top pt-3">Dirección</td>
-                    <td class="info-value">{{ (proyecto.cliente_direccion or '---') | replace('\n', '<br>') | safe }}</td>
-                </tr>
-                <tr>
-                    <td class="info-label">Ubicación</td>
-                    <td class="info-value">
-                        {% if proyecto.cliente_ubicacion %}
-                        <div class="location-buttons">
-                            <a href="https://waze.com/ul?ll={{ proyecto.cliente_ubicacion }}&navigate=yes&zoom=17"
-                                class="btn btn-small btn-location-waze" target="_blank">
-                                <img src="{{ url_for('static', filename='img/icons/waze.webp') }}" alt="Waze" class="icon-sm">
-                                Waze
-                            </a>
-                            <a href="https://maps.google.com/?q={{ proyecto.cliente_ubicacion }}"
-                                class="btn btn-small btn-location-maps" target="_blank">
-                                <img src="{{ url_for('static', filename='img/icons/maps.png') }}" alt="Maps" class="icon-sm">
-                                Maps
-                            </a>
+            <div class="client-info-grid">
+                <div class="client-info-section">
+                    <div class="client-info-row">
+                        <div class="client-info-label">Codigo</div>
+                        <div class="client-info-value">
+                            {% if proyecto.cod_cliente %}
+                            <span class="badge badge-pendiente">#{{ proyecto.cod_cliente }}</span>
+                            {% else %}
+                            <span class="text-gray-500">---</span>
+                            {% endif %}
                         </div>
-                        {% else %}
-                        <span class="text-not-entered">No ingresada</span>
-                        {% endif %}
-                    </td>
-                </tr>
-            </table>
+                    </div>
+                    <div class="client-info-row">
+                        <div class="client-info-label">Nombre</div>
+                        <div class="client-info-value"><strong>{{ proyecto.cliente_nombre or '---' }}</strong></div>
+                    </div>
+                    <div class="client-info-row">
+                        <div class="client-info-label">DUI / NIT</div>
+                        <div class="client-info-value">{{ proyecto.cliente_dui_nit or '---' }}</div>
+                    </div>
+                    <div class="client-info-row">
+                        <div class="client-info-label">NRC</div>
+                        <div class="client-info-value">{{ proyecto.cliente_nrc or '---' }}</div>
+                    </div>
+                </div>
+
+                <div class="client-info-section">
+                    <div class="client-info-row">
+                        <div class="client-info-label">Telefono</div>
+                        <div class="client-info-value">{{ proyecto.cliente_telefono or '---' }}</div>
+                    </div>
+                    <div class="client-info-row">
+                        <div class="client-info-label">Email</div>
+                        <div class="client-info-value">{{ proyecto.cliente_email or 'No proporcionado' }}</div>
+                    </div>
+                    <div class="client-info-row">
+                        <div class="client-info-label">Direccion</div>
+                        <div class="client-info-value client-info-value-top">{{ (proyecto.cliente_direccion or '---') | replace('\n', '<br>') | safe }}</div>
+                    </div>
+                    <div class="client-info-row">
+                        <div class="client-info-label">Ubicacion</div>
+                        <div class="client-info-value">
+                            {% if proyecto.cliente_ubicacion %}
+                            <div class="location-buttons">
+                                <a href="https://waze.com/ul?ll={{ proyecto.cliente_ubicacion }}&navigate=yes&zoom=17"
+                                    class="btn btn-small btn-location-waze" target="_blank">
+                                    <img src="{{ url_for('static', filename='img/icons/waze.webp') }}" alt="Waze" class="icon-sm">
+                                    Waze
+                                </a>
+                                <a href="https://maps.google.com/?q={{ proyecto.cliente_ubicacion }}"
+                                    class="btn btn-small btn-location-maps" target="_blank">
+                                    <img src="{{ url_for('static', filename='img/icons/maps.png') }}" alt="Maps" class="icon-sm">
+                                    Maps
+                                </a>
+                            </div>
+                            {% else %}
+                            <span class="text-not-entered">No ingresada</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -148,8 +146,7 @@
             Sistemas del Proyecto
         </h2>
         {% if current_user.rol == 'administrador' %}
-        <a href="{{ url_for('sistemas.crear_sistema', proyecto_id=proyecto.id) }}" class="btn btn-primary btn-small">
-            <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Agregar" class="icon-sm">
+        <a href="{{ url_for('sistemas.crear_sistema', proyecto_id=proyecto.id) }}" class="btn btn-primary btn-small btn-icon-add">
             Agregar Sistema
         </a>
         {% endif %}
@@ -163,9 +160,9 @@
                     <tr>
                         <th>Sistema</th>
                         <th>Monto Inicial</th>
-                        <th>Metros²</th>
-                        <th>H/Día</th>
-                        <th>Costo /M²</th>
+                        <th>Metros2</th>
+                        <th>H/Dia</th>
+                        <th>Costo /M2</th>
                         <th>Estado</th>
                         <th>Registro</th>
                         <th class="w-20 text-center">Acciones</th>
@@ -179,14 +176,13 @@
                             <small class="text-gray-500">{{ sistema.sistema_codigo }}</small>
                         </td>
                         <td>${{ "{:,.2f}".format(sistema.monto_inicial) }}</td>
-                        <td>{{ "{:,.2f}".format(sistema.metros_cuadrados_iniciales) }} m²</td>
+                        <td>{{ "{:,.2f}".format(sistema.metros_cuadrados_iniciales) }} m2</td>
                         <td>{{ sistema.hombres_por_dia_iniciales }}</td>
                         <td><strong>${{ "{:,.2f}".format(sistema.costo_servicio_m2_inicial) }}</strong></td>
                         <td><span class="badge badge-{{ sistema.estado }}">{{ sistema.estado|upper }}</span></td>
                         <td>{{ sistema.fecha_creacion }}</td>
                         <td class="text-center">
-                            <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-primary btn-small">
-                                <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Ver" class="icon-sm">
+                            <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-primary btn-small btn-icon-view">
                                 Ver
                             </a>
                         </td>
@@ -205,7 +201,7 @@
                 </div>
                 <div class="mobile-card-body">
                     <div class="mobile-card-row">
-                        <span class="mobile-card-label">Cód:</span>
+                        <span class="mobile-card-label">Cod:</span>
                         <span class="mobile-card-value">{{ sistema.sistema_codigo }}</span>
                     </div>
                     <div class="mobile-card-row">
@@ -213,17 +209,16 @@
                         <span class="mobile-card-value">${{ "{:,.2f}".format(sistema.monto_inicial) }}</span>
                     </div>
                     <div class="mobile-card-row">
-                        <span class="mobile-card-label">Metros²:</span>
-                        <span class="mobile-card-value">{{ "{:,.2f}".format(sistema.metros_cuadrados_iniciales) }} m²</span>
+                        <span class="mobile-card-label">Metros2:</span>
+                        <span class="mobile-card-value">{{ "{:,.2f}".format(sistema.metros_cuadrados_iniciales) }} m2</span>
                     </div>
                     <div class="mobile-card-row">
-                        <span class="mobile-card-label">Costo /M²:</span>
+                        <span class="mobile-card-label">Costo /M2:</span>
                         <span class="mobile-card-value"><strong>${{ "{:,.2f}".format(sistema.costo_servicio_m2_inicial) }}</strong></span>
                     </div>
                 </div>
                 <div class="mobile-card-actions">
-                    <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-primary btn-small">
-                        <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Ver" class="icon-sm">
+                    <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-primary btn-small btn-icon-view">
                         Ver Sistema
                     </a>
                 </div>
@@ -241,3 +236,4 @@
 {% endif %}
 
 {% endblock %}
+

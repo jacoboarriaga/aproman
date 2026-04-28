@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}Nueva Solicitud - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/comprobacion-del-portapapeles.png') }}" alt="Solicitud" class="icon-lg">
+        Nueva Solicitud
+    </h1>
+    <p class="dashboard-subtitle">
+        La solicitud se genera para bodega; al recibirla, entra a las existencias internas de <strong>{{ bodega_interna.nombre if bodega_interna else 'Bodega AproMan' }}</strong>.
+    </p>
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('solicitudes.listado_solicitudes') }}" class="btn btn-outline btn-icon-back">Volver a Solicitudes</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form id="form-solicitud" method="POST" action="{{ url_for('solicitudes.crear_solicitud') }}" onsubmit="return validarFormulario(event)">
+            <h3 class="form-section-title">Datos de Solicitud</h3>
+
+            <div class="form-grid">
+                <div class="div-form-group">
+                    <label class="label-required" for="cod_bodega">Bodega de Origen</label>
+                    <select id="cod_bodega" name="cod_bodega" class="form-control" required>
+                        <option value="">-- Seleccione una bodega --</option>
+                        {% for bodega in bodegas_erp %}
+                        <option value="{{ bodega.cod }}">{{ bodega.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required" for="empleado_recibe">Empleado que Recibe</label>
+                    <select id="empleado_recibe" name="empleado_recibe" class="form-control" required>
+                        <option value="">-- Seleccione un empleado --</option>
+                        {% for emp in empleados %}
+                        <option value="{{ emp.cod }}">{{ emp.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="div-form-group grid-column-full">
+                    <label for="observaciones">Observaciones</label>
+                    <input id="observaciones" name="observaciones" class="form-control" maxlength="500" placeholder="Referencia interna o nota de solicitud">
+                </div>
+            </div>
+
+            <h3 class="form-section-title">Detalle de Productos</h3>
+            <div class="table-container">
+                <table class="table" id="tabla-productos">
+                    <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Producto</th>
+                            <th>Precio Unit.</th>
+                            <th>Existencias</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-productos"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" class="td-agregar-fila">
+                                <button type="button" onclick="agregarFila()" class="btn-agregar-fila-inline">
+                                    <span class="btn-agregar-icon">+</span>
+                                    Añadir producto
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="tfoot-total-label">Total Estimado:</td>
+                            <td class="tfoot-total-valor" id="total-estimado">$0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-icon-save" {% if not bodegas_erp or not empleados or not bodega_interna %}disabled{% endif %}>
+                    Generar Solicitud
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let filaCount = 0;
+
+function agregarFila() {
+    filaCount++;
+    const tbody = document.getElementById('tbody-productos');
+    const tr = document.createElement('tr');
+    tr.id = `fila-${filaCount}`;
+    tr.innerHTML = `
+        <td data-label="Codigo">
+            <input type="text" name="codigo[]" id="codigo-${filaCount}" class="form-control" autocomplete="off" onblur="buscarProducto(${filaCount})" required>
+        </td>
+        <td data-label="Producto">
+            <input type="text" id="nombre-${filaCount}" class="form-control" readonly tabindex="-1">
+        </td>
+        <td data-label="Precio Unit.">
+            <input type="number" id="precio-${filaCount}" class="form-control numeric-input" readonly tabindex="-1">
+        </td>
+        <td data-label="Existencias">
+            <span id="existencias-${filaCount}" class="stock-ok">--</span>
+            <input type="hidden" id="existencias-val-${filaCount}" value="0">
+            <input type="hidden" id="unidad-${filaCount}" name="unidad_medida[]" value="">
+        </td>
+        <td data-label="Cantidad">
+            <input type="number" id="cantidad-${filaCount}" name="cantidad[]" class="form-control numeric-input" min="0.01" step="0.01" value="1" onchange="calcularSubtotal(${filaCount})" onkeyup="calcularSubtotal(${filaCount})" required>
+        </td>
+        <td data-label="Subtotal">
+            <span>$</span><span id="subtotal-txt-${filaCount}">0.00</span>
+            <input type="hidden" id="subtotal-${filaCount}" class="subtotal-input" value="0">
+        </td>
+        <td class="td-accion text-center">
+            <button type="button" class="btn-eliminar-fila" onclick="eliminarFila(${filaCount})" title="Eliminar fila">x</button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+}
+
+function buscarProducto(id) {
+    const codigoInput = document.getElementById(`codigo-${id}`);
+    const bodegaSelect = document.getElementById('cod_bodega');
+    if (!codigoInput || !bodegaSelect) return;
+
+    const codigo = codigoInput.value.trim().toUpperCase();
+    const bodega = bodegaSelect.value;
+    const nombreInput = document.getElementById(`nombre-${id}`);
+    const precioInput = document.getElementById(`precio-${id}`);
+    const existenciasSpan = document.getElementById(`existencias-${id}`);
+    const existenciasVal = document.getElementById(`existencias-val-${id}`);
+    const unidadInput = document.getElementById(`unidad-${id}`);
+
+    if (!codigo) {
+        limpiarFila(id);
+        return;
+    }
+    if (!bodega) {
+        existenciasSpan.textContent = 'Seleccione bodega';
+        existenciasSpan.className = 'stock-warning';
+        return;
+    }
+
+    nombreInput.value = 'Buscando...';
+    fetch(`/solicitudes/api/producto?codigo=${encodeURIComponent(codigo)}&bodega=${encodeURIComponent(bodega)}`)
+        .then(resp => resp.json())
+        .then(data => {
+            if (data.error) {
+                limpiarFila(id);
+                nombreInput.value = 'Producto no encontrado';
+                existenciasSpan.textContent = '--';
+                existenciasSpan.className = 'stock-warning';
+                return;
+            }
+            nombreInput.value = data.nombre;
+            precioInput.value = parseFloat(data.precio).toFixed(4);
+            existenciasVal.value = data.existencias;
+            unidadInput.value = data.unidad_medida;
+            existenciasSpan.textContent = data.existencias;
+            existenciasSpan.className = parseFloat(data.existencias) > 0 ? 'stock-ok' : 'stock-warning';
+            calcularSubtotal(id);
+        })
+        .catch(() => {
+            limpiarFila(id);
+            nombreInput.value = 'Error al buscar';
+        });
+}
+
+function limpiarFila(id) {
+    const nombreInput = document.getElementById(`nombre-${id}`);
+    const precioInput = document.getElementById(`precio-${id}`);
+    const existenciasSpan = document.getElementById(`existencias-${id}`);
+    const existenciasVal = document.getElementById(`existencias-val-${id}`);
+    const unidadInput = document.getElementById(`unidad-${id}`);
+    if (nombreInput) nombreInput.value = '';
+    if (precioInput) precioInput.value = '';
+    if (existenciasSpan) existenciasSpan.textContent = '--';
+    if (existenciasVal) existenciasVal.value = '0';
+    if (unidadInput) unidadInput.value = '';
+    calcularSubtotal(id);
+}
+
+function calcularSubtotal(id) {
+    const precio = parseFloat(document.getElementById(`precio-${id}`)?.value) || 0;
+    const cantidad = parseFloat(document.getElementById(`cantidad-${id}`)?.value) || 0;
+    const subtotal = precio * cantidad;
+    document.getElementById(`subtotal-txt-${id}`).innerText = subtotal.toFixed(2);
+    document.getElementById(`subtotal-${id}`).value = subtotal;
+    calcularTotalGral();
+}
+
+function calcularTotalGral() {
+    let total = 0;
+    document.querySelectorAll('.subtotal-input').forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    document.getElementById('total-estimado').innerText = '$' + total.toFixed(2);
+}
+
+function eliminarFila(id) {
+    const tr = document.getElementById(`fila-${id}`);
+    if (tr) tr.remove();
+    calcularTotalGral();
+}
+
+function validarFormulario(event) {
+    const filas = document.querySelectorAll('#tbody-productos tr');
+    if (!filas.length) {
+        event.preventDefault();
+        alert('Agrega al menos un producto.');
+        return false;
+    }
+    return true;
+}
+
+document.addEventListener('DOMContentLoaded', agregarFila);
+</script>
+{% endblock %}

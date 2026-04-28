@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}Editar Material Asignado - AproMan{% endblock %}
+{% block title %}Consumo de Producto - AproMan{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
     <h1 class="dashboard-title">
         <img src="{{ url_for('static', filename='img/icons/editar.png') }}" class="icon-lg mr-sm">
-        Editar Asignación de Material
+        Consumo de Producto
     </h1>
     <p class="dashboard-subtitle">
-        Material: <strong>{{ asignacion.material_nombre }}</strong>
+        Producto: <strong>{{ asignacion.producto_nombre }}</strong>
         <br>Sistema: <strong>{{ asignacion.sistema_nombre }}</strong>
     </p>
 </div>
@@ -24,10 +24,30 @@
         <form method="POST" action="{{ url_for('sistemas.editar_asignacion_material', id=asignacion.id) }}">
             
             <div class="form-grid">
-                <!-- Combobox Material -->
+                <div class="div-form-group">
+                    <label>Asignado</label>
+                    <input class="input-text" type="text" readonly value="{{ '{:,.2f}'.format(asignacion.cantidad_asignada) }} {{ asignacion.unidad_medida }}">
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Consumido</label>
+                    <input class="input-text numeric-input" type="number" step="0.0001" min="{{ asignacion.cantidad_consumida }}" name="cantidad_consumida" value="{{ asignacion.cantidad_consumida }}" required>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Devuelto / Sobrante</label>
+                    <input class="input-text numeric-input" type="number" step="0.0001" min="{{ asignacion.cantidad_devuelta }}" name="cantidad_devuelta" value="{{ asignacion.cantidad_devuelta }}" required>
+                </div>
+
                 <div class="div-form-group" style="grid-column: 1 / -1;">
+                    <label>Observacion</label>
+                    <input class="input-text" type="text" name="observacion" maxlength="500" placeholder="Nota del consumo o devolucion">
+                </div>
+
+                <!-- Combobox Material -->
+                <div class="div-form-group" style="display:none; grid-column: 1 / -1;">
                     <label class="label-required">Material Asignado *</label>
-                    <select class="input-text" name="material_id" required>
+                    <select class="input-text" name="material_id" disabled>
                         {% for m in catalogo_materiales %}
                             <option value="{{ m.id }}" {% if asignacion.material_id == m.id %}selected{% endif %}>{{ m.nombre }}</option>
                         {% endfor %}
@@ -35,7 +55,7 @@
                 </div>
 
                 <!-- Toggle ¿Genera costo? (solo visual) -->
-                <div class="div-form-group" style="grid-column: 1 / -1;">
+                <div class="div-form-group" style="display:none; grid-column: 1 / -1;">
                     <div style="
                         display: flex;
                         align-items: center;
@@ -46,7 +66,6 @@
                         <!-- Switch toggle -->
                         <label class="toggle-switch" style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0;">
                             <input type="checkbox" id="genera_costo" name="genera_costo" value="1"
-                                   {% if asignacion.costo_material is not none %}checked{% endif %}
                                    style="opacity:0; width:0; height:0;"
                                    onchange="toggleCostoFields(this)">
                             <span style="
@@ -117,12 +136,12 @@
                 
                 <button type="submit" name="accion" value="eliminar" class="btn btn-error" onclick="return confirm('¿Estás seguro de que deseas retirar este material del sistema?');" style="margin-right: 10px;">
                     <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm mr-xs">
-                    Retirar Material
+                    Retirar Producto
                 </button>
                 
                 <button type="submit" name="accion" value="guardar" class="btn btn-primary">
                     <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" class="icon-sm mr-xs">
-                    Guardar Cambios
+                    Guardar Consumo
                 </button>
             </div>
         </form>

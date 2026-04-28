@@ -1,0 +1,99 @@
+﻿{% extends 'base.html' %}
+{% block title %}Inventario - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/cajas.png') }}" alt="Inventario" class="icon-lg">
+        Inventario
+    </h1>
+    <p class="dashboard-subtitle">Existencias internas disponibles.</p>
+</div>
+
+<div class="page-actions">
+    <details class="dropdown-details">
+        <summary class="btn btn-primary btn-icon-add">
+            Nuevo Registro
+        </summary>
+        <div class="dropdown-menu">
+            <a href="{{ url_for('inventario.nuevo_producto') }}" class="dropdown-menu-link">Nuevo Producto</a>
+            <a href="{{ url_for('inventario.nuevo_material') }}" class="dropdown-menu-link">Nuevo Material</a>
+            <a href="{{ url_for('inventario.nuevo_equipo') }}" class="dropdown-menu-link">Nuevo Equipo</a>
+        </div>
+    </details>
+    <a href="{{ url_for('solicitudes.crear_solicitud') }}" class="btn btn-secondary btn-icon-request">
+        Nueva Solicitud
+    </a>
+    <a href="{{ url_for('inventario.ajuste_stock') }}" class="btn btn-secondary btn-icon-adjust">
+        Ajuste de Existencias
+    </a>
+    <a href="{{ url_for('inventario.movimientos_inventario') }}" class="btn btn-outline btn-icon-history">
+        Movimientos
+    </a>
+</div>
+
+{% if grupos_inventario %}
+{% for grupo in grupos_inventario %}
+<div class="card mb-lg">
+    <div class="card-header">
+        <h2 class="card-title">{{ grupo.titulo }}</h2>
+    </div>
+    <div class="card-body card-body-mobile-flat">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Codigo</th>
+                        <th>Bodega</th>
+                        <th>Existencias</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in grupo['items'] %}
+                    <tr>
+                        <td><strong>{{ item.nombre }}</strong></td>
+                        <td><code class="text-sm">{{ item.codigo }}</code></td>
+                        <td>{{ item.bodega_nombre }}</td>
+                        <td><strong>{{ "{:,.2f}".format(item.stock_disponible) }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for item in grupo['items'] %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ item.nombre }}</div>
+                    <strong>{{ "{:,.2f}".format(item.stock_disponible) }}</strong>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Codigo:</span>
+                        <span class="mobile-card-value"><code>{{ item.codigo }}</code></span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Bodega:</span>
+                        <span class="mobile-card-value">{{ item.bodega_nombre }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Existencias:</span>
+                        <span class="mobile-card-value"><strong>{{ "{:,.2f}".format(item.stock_disponible)
+                                }}</strong></span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state-container">
+    <p><img src="{{ url_for('static', filename='img/icons/cajas.png') }}" alt="Inventario" class="empty-state-img"></p>
+    <p>No hay registros en inventario.</p>
+</div>
+{% endif %}
+{% endblock %}

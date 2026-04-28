@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block title %}Solicitudes - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/comprobacion-del-portapapeles.png') }}" alt="Solicitudes" class="icon-lg">
+        Solicitudes
+    </h1>
+    <p class="dashboard-subtitle">Solicitudes de producto para ingreso a bodega AproMan.</p>
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('solicitudes.crear_solicitud') }}" class="btn btn-primary btn-icon-add">Nueva Solicitud</a>
+    <a href="{{ url_for('inventario.listado_inventario') }}" class="btn btn-outline btn-icon-back">Volver</a>
+</div>
+
+<div class="card">
+    <div class="card-body card-body-mobile-flat">
+        {% if solicitudes %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Documento</th>
+                        <th>Fecha</th>
+                        <th>Bodega</th>
+                        <th>Estado</th>
+                        <th>Solicitado</th>
+                        <th>Recibido</th>
+                        <th>Usuario</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in solicitudes %}
+                    <tr>
+                        <td><strong>#{{ s.id }}</strong></td>
+                        <td>{{ s.num_documento_erp or '---' }}</td>
+                        <td>{{ s.fecha_solicitud_fmt }}</td>
+                        <td>{{ s.bodega_destino }}</td>
+                        <td><span class="badge badge-{{ 'completado' if s.estado == 'recibida' else 'pendiente' }}">{{ s.estado }}</span></td>
+                        <td>{{ "{:,.2f}".format(s.total_solicitado) }}</td>
+                        <td>{{ "{:,.2f}".format(s.total_recibido) }}</td>
+                        <td>{{ s.solicitado_por_nombre }}</td>
+                        <td>
+                            {% if s.estado in ['solicitada', 'recibida_parcial'] %}
+                            <a href="{{ url_for('solicitudes.confirmar_solicitud', id=s.id) }}" class="btn btn-secondary btn-small btn-icon-save">Recibir</a>
+                            {% else %}
+                            <span class="text-gray-500">---</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for s in solicitudes %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">Solicitud #{{ s.id }}</div>
+                    <span class="badge badge-{{ 'completado' if s.estado == 'recibida' else 'pendiente' }}">{{ s.estado }}</span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Documento:</span>
+                        <span class="mobile-card-value">{{ s.num_documento_erp or '---' }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Fecha:</span>
+                        <span class="mobile-card-value">{{ s.fecha_solicitud_fmt }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Bodega:</span>
+                        <span class="mobile-card-value">{{ s.bodega_destino }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Solicitado:</span>
+                        <span class="mobile-card-value">{{ "{:,.2f}".format(s.total_solicitado) }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Recibido:</span>
+                        <span class="mobile-card-value">{{ "{:,.2f}".format(s.total_recibido) }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Usuario:</span>
+                        <span class="mobile-card-value">{{ s.solicitado_por_nombre }}</span>
+                    </div>
+                </div>
+                {% if s.estado in ['solicitada', 'recibida_parcial'] %}
+                <div class="mobile-card-actions">
+                    <a href="{{ url_for('solicitudes.confirmar_solicitud', id=s.id) }}" class="btn btn-secondary btn-small btn-icon-save">Recibir</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-container">
+            <p>No hay solicitudes registradas aun.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,50 +1,49 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Eliminar {{ proyecto.codigo }} - AproMan{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
-    <h1 class="dashboard-title" style="color: var(--color-error);">
+    <h1 class="dashboard-title text-danger">
         <img src="{{ url_for('static', filename='img/icons/eliminar-rojo.png') }}" alt="Advertencia" class="icon-lg">
         Eliminar Proyecto
     </h1>
-    <p class="dashboard-subtitle">Esta acción no se puede deshacer</p>
+    <p class="dashboard-subtitle">Esta acciÃ³n no se puede deshacer</p>
 </div>
 
-<div style="margin-bottom: var(--espaciado-lg);">
-    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline">
-        ← Volver al Detalle
+<div class="page-actions">
+    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline btn-icon-back">
+        Volver al Detalle
     </a>
 </div>
 
-<div class="card" style="border-left: 4px solid var(--color-error);">
-    <div class="card-header" style="background-color: #FEE2E2;">
-        <h2 class="card-title" style="color: var(--color-error);">
+<div class="card danger-card">
+    <div class="card-header">
+        <h2 class="card-title">
             <img src="{{ url_for('static', filename='img/icons/advertencia-rojo.png') }}" alt="Advertencia" class="icon-md">
-            ADVERTENCIA: Acción Irreversible
+            ADVERTENCIA: AcciÃ³n Irreversible
         </h2>
     </div>
     <div class="card-body">
-        <p style="font-size: 1.1rem; margin-bottom: 1rem;">
-            Estás a punto de eliminar definitivamente el proyecto <strong>{{ proyecto.codigo }} - {{ proyecto.cliente_nombre }}</strong>.
+        <p class="text-lg mb-md">
+            EstÃ¡s a punto de eliminar definitivamente el proyecto <strong>{{ proyecto.codigo }} - {{ proyecto.cliente_nombre }}</strong>.
         </p>
-        <p style="color: var(--color-texto-claro); margin-bottom: 1.5rem;">
-            Esta acción eliminará el proyecto y <strong>toda la información asociada</strong>, incluyendo:
+        <p class="text-gray-500 mb-lg">
+            Esta acciÃ³n eliminarÃ¡ el proyecto y <strong>toda la informaciÃ³n asociada</strong>, incluyendo:
         </p>
         
-        <ul style="margin-top: 10px; padding-left: 20px; color: var(--color-texto-claro); margin-bottom: 1.5rem;">
-            <li><strong>{{ total_materiales_count }}</strong> registros de materiales (Total: ${{ "{:,.2f}".format(total_materiales) }})</li>
+        <ul class="mt-sm pl-6 text-gray-500 mb-lg">
+            <li><strong>{{ total_materiales_count }}</strong> gastos variables (Total: ${{ "{:,.2f}".format(total_materiales) }})</li>
             <li><strong>{{ total_personal_count }}</strong> pintores asignados (Total: ${{ "{:,.2f}".format(total_personal) }})</li>
             <li><strong>{{ total_notas_count }}</strong> notas o comentarios</li>
         </ul>
 
         <form method="POST" action="{{ url_for('proyectos.eliminar_proyecto', pk=proyecto.id) }}">
-            <div style="display: flex; gap: var(--espaciado-sm); justify-content: flex-end;">
+            <div class="form-actions">
                 <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-secondary">
-                    ← Cancelar y Volver
+                    Cancelar y Volver
                 </a>
-                <button type="submit" class="btn" style="background: var(--color-error); color: white;">
-                    <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" alt="Eliminar" class="icon-sm">
+                <button type="submit" class="btn btn-error btn-icon-delete">
                     Eliminar Definitivamente
                 </button>
             </div>
@@ -56,16 +55,16 @@
     <div class="card-header">
         <h2 class="card-title">
             <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Info" class="icon-md">
-            Información
+            InformaciÃ³n
         </h2>
     </div>
     <div class="card-body">
-        <p style="margin: 0; color: var(--color-texto-claro);">
+        <p class="m-0 text-gray-500">
             <strong>Usuario que elimina:</strong>
             {{ current_user.get_full_name() }} ({{ current_user.rol|capitalize }})
         </p>
-        <p style="margin-top: 10px; font-size: 0.9em; color: var(--color-texto-claro);">
-            * Solo los administradores pueden realizar esta acción. Al confirmar, los datos se borrarán en cascada.
+        <p class="mt-sm text-sm text-gray-500">
+            * Solo los administradores pueden realizar esta acciÃ³n. Al confirmar, los datos se borrarÃ¡n en cascada.
         </p>
     </div>
 </div>

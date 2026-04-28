@@ -1,62 +1,60 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Crear Proyecto - AproMan{% endblock %}
 
 {% block content %}
-<!-- Header de la Página -->
+<!-- Header de la PÃ¡gina -->
 <div class="dashboard-header">
     <h1 class="dashboard-title">
         <img src="{{ url_for('static', filename='img/icons/agregar.png') }}" alt="Nuevo" class="icon-lg">
         Crear Nuevo Proyecto
     </h1>
-    <p class="dashboard-subtitle">Completa la información del nuevo proyecto</p>
+    <p class="dashboard-subtitle">Completa la informaciÃ³n del nuevo proyecto</p>
 </div>
 
-<!-- Navegación -->
-<div class="mb-lg">
-    <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-outline">
-        ← Volver a Proyectos
+<!-- NavegaciÃ³n -->
+<div class="page-actions">
+    <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-outline btn-icon-back">
+        Volver a Proyectos
     </a>
 </div>
 
-<!-- Card: Búsqueda de Cliente -->
+<!-- Card: BÃºsqueda de Cliente -->
 <div class="card mb-lg">
     <div class="card-header">
         <h2 class="card-title">
             <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Cliente" class="icon-md">
             Datos del Cliente
         </h2>
-        <p class="card-subtitle">Ingresa el código del cliente para cargar su información</p>
+        <p class="card-subtitle">Ingresa el cÃ³digo del cliente para cargar su informaciÃ³n</p>
     </div>
     <div class="card-body">
         <div class="flex gap-sm items-end flex-wrap">
             <div class="div-form-group flex-1 min-w-200 max-w-320 m-0">
-                <label class="label-required">Código de Cliente *</label>
-                <input id="input-cod-erp" class="input-text" type="number" min="1"
-                       placeholder="Ej: 10870" autocomplete="off"
-                       style="font-size: 1.1rem; font-weight: 600; letter-spacing: 1px;">
+                <label class="label-required">CÃ³digo de Cliente *</label>
+                <input id="input-cod-erp" class="input-text client-code-input" type="number" min="1"
+                       placeholder="Ej: 10870" autocomplete="off">
             </div>
-            <button type="button" id="btn-buscar-cliente" class="btn btn-primary" style="height: 44px;">
-                <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Buscar" class="icon-sm">
+            <button type="button" id="btn-buscar-cliente" class="btn btn-primary btn-icon-view">
                 Buscar Cliente
             </button>
         </div>
 
-        <!-- Alerta de resultado de búsqueda -->
+        <!-- Alerta de resultado de bÃºsqueda -->
         <div id="erp-alert" class="hidden mt-md p-md rounded-lg text-sm"></div>
 
         <!-- Preview del cliente encontrado -->
         <div id="cliente-preview" class="hidden mt-md p-md rounded-lg border bg-secondary border-border">
             <p class="font-600 text-secundario mb-sm">
-                ✅ Cliente encontrado
+                âœ… Cliente encontrado
             </p>
             <div class="grid grid-auto-fit gap-sm text-sm">
-                <div><span class="text-gray-500">Nombre:</span> <strong id="prev-nombre">—</strong></div>
-                <div><span class="text-gray-500">NIT:</span> <strong id="prev-nit">—</strong></div>
-                <div><span class="text-gray-500">NRC:</span> <strong id="prev-nrc">—</strong></div>
-                <div><span class="text-gray-500">Teléfono:</span> <strong id="prev-tel">—</strong></div>
-                <div><span class="text-gray-500">Email:</span> <strong id="prev-email">—</strong></div>
-                <div><span class="text-gray-500">Dirección:</span> <strong id="prev-dir">—</strong></div>
+                <div><span class="text-gray-500">Nombre:</span> <strong id="prev-nombre">â€”</strong></div>
+                <div><span class="text-gray-500">NIT:</span> <strong id="prev-nit">â€”</strong></div>
+                <div><span class="text-gray-500">NRC:</span> <strong id="prev-nrc">â€”</strong></div>
+                <div><span class="text-gray-500">TelÃ©fono:</span> <strong id="prev-tel">â€”</strong></div>
+                <div><span class="text-gray-500">Email:</span> <strong id="prev-email">â€”</strong></div>
+                <div><span class="text-gray-500">DirecciÃ³n:</span> <strong id="prev-dir">â€”</strong></div>
             </div>
         </div>
     </div>
@@ -67,7 +65,7 @@
     <div class="card-header">
         <h2 class="card-title">
             <img src="{{ url_for('static', filename='img/icons/carpeta.png') }}" alt="Formulario" class="icon-md">
-            Información del Proyecto
+            InformaciÃ³n del Proyecto
         </h2>
     </div>
 
@@ -95,51 +93,51 @@
                     <div class="div-form-group">
                         <label class="label-normal">Nombre</label>
                         <input id="d-nombre" class="input-text bg-secondary text-gray-500" type="text" readonly
-                               placeholder="— busca el cliente primero —">
+                               placeholder="â€” busca el cliente primero â€”">
                     </div>
 
                     <div class="div-form-group">
                         <label class="label-normal">NIT</label>
                         <input id="d-nit" class="input-text bg-secondary text-gray-500" type="text" readonly
-                               placeholder="—">
+                               placeholder="â€”">
                     </div>
 
                     <div class="div-form-group">
                         <label class="label-normal">NRC</label>
                         <input id="d-nrc" class="input-text bg-secondary text-gray-500" type="text" readonly
-                               placeholder="—">
+                               placeholder="â€”">
                     </div>
 
                     <div class="div-form-group">
-                        <label class="label-normal">Teléfono</label>
+                        <label class="label-normal">TelÃ©fono</label>
                         <input id="d-tel" class="input-text bg-secondary text-gray-500" type="text" readonly
-                               placeholder="—">
+                               placeholder="â€”">
                     </div>
 
                     <div class="div-form-group">
                         <label class="label-normal">Email</label>
                         <input id="d-email" class="input-text bg-secondary text-gray-500" type="text" readonly
-                               placeholder="—">
+                               placeholder="â€”">
                     </div>
 
                     <div class="div-form-group">
-                        <label class="label-normal">Dirección</label>
+                        <label class="label-normal">DirecciÃ³n</label>
                         <input id="d-dir" class="input-text bg-secondary text-gray-500" type="text" readonly
-                               placeholder="—">
+                               placeholder="â€”">
                     </div>
 
                     <div class="div-form-group">
-                        <label class="label-normal">Ubicación Geográfica (Coordenadas)</label>
+                        <label class="label-normal">UbicaciÃ³n GeogrÃ¡fica (Coordenadas)</label>
                         <input id="d-ubic" class="input-text bg-secondary text-gray-500" type="text" readonly
-                               placeholder="—">
+                               placeholder="â€”">
                     </div>
                 </div>
             </div>
 
-            <!-- Asignación de Agente -->
+            <!-- AsignaciÃ³n de Agente -->
             <div class="border-t pt-md mt-md">
                 <h3 class="text-lg font-600 text-secundario mb-md">
-                    Asignación de Responsable
+                    AsignaciÃ³n de Responsable
                 </h3>
                 <div class="div-form-group max-w-420">
                     <label class="label-required">Seleccione un Agente *</label>
@@ -153,12 +151,10 @@
             </div>
 
             <!-- Botones -->
-            <div class="flex gap-sm justify-end pt-lg border-t mt-md">
-                <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" id="btn-submit" class="btn btn-primary" disabled
+            <div class="form-actions">
+                <a href="{{ url_for('proyectos.mis_proyectos') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" id="btn-submit" class="btn btn-primary btn-icon-save" disabled
                         title="Busca un cliente primero">
-                    <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Guardar"
-                         class="icon-sm">
                     Crear Proyecto
                 </button>
             </div>
@@ -166,19 +162,19 @@
     </div>
 </div>
 
-<!-- Card: Información Adicional -->
+<!-- Card: InformaciÃ³n Adicional -->
 <div class="card mt-lg">
     <div class="card-header">
         <h2 class="card-title">
             <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Info" class="icon-md">
-            Información Importante
+            InformaciÃ³n Importante
         </h2>
     </div>
     <div class="card-body">
         <ul class="m-0 pl-6 text-gray-500">
-            <li class="mb-xs">El proyecto se creará en estado <strong>Pendiente</strong> por defecto</li>
-            <li class="mb-xs">El código del proyecto se generará automáticamente</li>
-            <li>Podras agregar sistemas, materiales y pintores una vez que el proyecto este en estado <strong>Activo</strong></li>
+            <li class="mb-xs">El proyecto se crearÃ¡ en estado <strong>Pendiente</strong> por defecto</li>
+            <li class="mb-xs">El cÃ³digo del proyecto se generarÃ¡ automÃ¡ticamente</li>
+            <li>Podras agregar sistemas, productos, equipos, gastos y pintores una vez que el proyecto este en estado <strong>Activo</strong></li>
         </ul>
     </div>
 </div>
@@ -212,7 +208,7 @@
     const hDir    = document.getElementById('h-cliente-dir');
     const hUbic   = document.getElementById('h-cliente-ubic');
 
-    // Campos del preview rápido
+    // Campos del preview rÃ¡pido
     const pvNombre = document.getElementById('prev-nombre');
     const pvNit    = document.getElementById('prev-nit');
     const pvNrc    = document.getElementById('prev-nrc');
@@ -257,12 +253,12 @@
         hUbic.value   = c.UBICACION_GEOGRAFICA || '';
 
         // Preview
-        pvNombre.textContent = c.NOMBRE_CLIENTE || '—';
-        pvNit.textContent    = c.NIT_CLIENTE    || '—';
-        pvNrc.textContent    = c.NRC_CLIENTE    || '—';
-        pvTel.textContent    = c.TELEFONO       || '—';
-        pvEmail.textContent  = c.CORREO_CLIENTE || '—';
-        pvDir.textContent    = c.DIRECCION      || '—';
+        pvNombre.textContent = c.NOMBRE_CLIENTE || 'â€”';
+        pvNit.textContent    = c.NIT_CLIENTE    || 'â€”';
+        pvNrc.textContent    = c.NRC_CLIENTE    || 'â€”';
+        pvTel.textContent    = c.TELEFONO       || 'â€”';
+        pvEmail.textContent  = c.CORREO_CLIENTE || 'â€”';
+        pvDir.textContent    = c.DIRECCION      || 'â€”';
 
         preview.style.display = 'block';
         btnSubmit.disabled    = false;
@@ -272,13 +268,13 @@
     async function buscarCliente() {
         const codigo = inputCod.value.trim();
         if (!codigo) {
-            showAlert('Ingresa un código de cliente.', 'error');
+            showAlert('Ingresa un cÃ³digo de cliente.', 'error');
             clearCliente();
             return;
         }
         alertBox.style.display = 'none';
         btnBuscar.disabled = true;
-        btnBuscar.textContent = '⏳ Buscando…';
+        btnBuscar.textContent = 'â³ Buscandoâ€¦';
 
         try {
             const resp = await fetch(`{{ url_for('proyectos.buscar_cliente_erp') }}?codigo=${encodeURIComponent(codigo)}`);
@@ -295,7 +291,7 @@
             clearCliente();
         } finally {
             btnBuscar.disabled = false;
-            btnBuscar.innerHTML = `<img src="{{ url_for('static', filename='img/icons/informacion.png') }}" class="icon-sm" alt="Buscar"> Buscar Cliente`;
+            btnBuscar.textContent = 'Buscar Cliente';
         }
     }
 

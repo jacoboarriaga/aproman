@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Editar {{ proyecto.codigo }} - AproMan{% endblock %}
 
@@ -14,52 +14,49 @@
     </p>
 </div>
 
-<!-- Navegación -->
-<div style="margin-bottom: var(--espaciado-lg);">
-    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline">
-        ← Volver al Detalle
+<!-- NavegaciÃ³n -->
+<div class="page-actions">
+    <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline btn-icon-back">
+        Volver al Detalle
     </a>
 </div>
 
 <!-- Card: Datos del Cliente -->
-<div class="card" style="margin-bottom: var(--espaciado-lg);">
+<div class="card mb-lg">
     <div class="card-header">
         <h2 class="card-title">
             <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Cliente" class="icon-md">
             Datos del Cliente
         </h2>
         <p class="card-subtitle">
-            Código actual: <strong>#{{ proyecto.cod_cliente or '—' }}</strong> — Puedes cambiarlo buscando un nuevo código
+            CÃ³digo actual: <strong>#{{ proyecto.cod_cliente or 'â€”' }}</strong> â€” Puedes cambiarlo buscando un nuevo cÃ³digo
         </p>
     </div>
     <div class="card-body">
-        <div style="display: flex; gap: var(--espaciado-sm); align-items: flex-end; flex-wrap: wrap;">
-            <div class="div-form-group" style="flex: 1; min-width: 200px; max-width: 320px; margin-bottom: 0;">
-                <label class="label-required">Código de Cliente *</label>
-                <input id="input-cod-erp" class="input-text" type="number" min="1"
+        <div class="flex gap-sm items-end flex-wrap">
+            <div class="div-form-group flex-1 min-w-200 max-w-320 m-0">
+                <label class="label-required">CÃ³digo de Cliente *</label>
+                <input id="input-cod-erp" class="input-text client-code-input" type="number" min="1"
                        placeholder="Ej: 10870"
                        value="{{ proyecto.cod_cliente or '' }}"
-                       autocomplete="off"
-                       style="font-size: 1.1rem; font-weight: 600; letter-spacing: 1px;">
+                       autocomplete="off">
             </div>
-            <button type="button" id="btn-buscar-cliente" class="btn btn-primary" style="height: 44px;">
-                <img src="{{ url_for('static', filename='img/icons/informacion.png') }}" alt="Buscar" class="icon-sm">
+            <button type="button" id="btn-buscar-cliente" class="btn btn-primary btn-icon-view">
                 Buscar Cliente
             </button>
         </div>
 
         <!-- Alerta de resultado -->
-        <div id="erp-alert" style="display:none; margin-top: var(--espaciado-md); padding: 0.85rem 1rem;
-             border-radius: 8px; font-size: 0.95rem;"></div>
+        <div id="erp-alert" class="result-alert"></div>
     </div>
 </div>
 
-<!-- Card: Formulario de Edición -->
-<div class="card" style="margin-bottom: var(--espaciado-lg);">
+<!-- Card: Formulario de EdiciÃ³n -->
+<div class="card mb-lg">
     <div class="card-header">
         <h2 class="card-title">
             <img src="{{ url_for('static', filename='img/icons/carpeta.png') }}" alt="Formulario" class="icon-md">
-            Información del Proyecto
+            InformaciÃ³n del Proyecto
         </h2>
         <p class="card-subtitle">Modifica los campos necesarios y guarda los cambios</p>
     </div>
@@ -78,71 +75,69 @@
             <input type="hidden" id="h-cliente-ubic"     name="cliente_ubicacion"  value="{{ proyecto.cliente_ubicacion or '' }}">
 
             <!-- Grid de datos del cliente (readonly) -->
-            <div style="margin-bottom: var(--espaciado-lg);">
-                <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-secundario);
-                            margin-bottom: var(--espaciado-md); padding-bottom: 6px;
-                            border-bottom: 1px solid var(--color-borde);">
+            <div class="mb-lg">
+                <h3 class="text-lg font-600 text-secundario mb-md pb-sm border-b">
                     Datos del Cliente
                 </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--espaciado-md);">
+                <div class="grid grid-auto-fit gap-md">
 
                     <div class="div-form-group">
                         <label class="label-normal">Nombre</label>
-                        <input id="d-nombre" class="input-text" type="text" readonly
+                        <input id="d-nombre" class="input-text input-readonly" type="text" readonly
                                value="{{ proyecto.cliente_nombre or '' }}"
-                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                               >
                     </div>
 
                     <div class="div-form-group">
                         <label class="label-normal">NIT</label>
-                        <input id="d-nit" class="input-text" type="text" readonly
+                        <input id="d-nit" class="input-text input-readonly" type="text" readonly
                                value="{{ proyecto.cliente_dui_nit or '' }}"
-                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                               >
                     </div>
 
                     <div class="div-form-group">
                         <label class="label-normal">NRC</label>
-                        <input id="d-nrc" class="input-text" type="text" readonly
+                        <input id="d-nrc" class="input-text input-readonly" type="text" readonly
                                value="{{ proyecto.cliente_nrc or '' }}"
-                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                               >
                     </div>
 
                     <div class="div-form-group">
-                        <label class="label-normal">Teléfono</label>
-                        <input id="d-tel" class="input-text" type="text" readonly
+                        <label class="label-normal">TelÃ©fono</label>
+                        <input id="d-tel" class="input-text input-readonly" type="text" readonly
                                value="{{ proyecto.cliente_telefono or '' }}"
-                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                               >
                     </div>
 
                     <div class="div-form-group">
                         <label class="label-normal">Email</label>
-                        <input id="d-email" class="input-text" type="text" readonly
+                        <input id="d-email" class="input-text input-readonly" type="text" readonly
                                value="{{ proyecto.cliente_email or '' }}"
-                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                               >
                     </div>
 
                     <div class="div-form-group">
-                        <label class="label-normal">Dirección</label>
-                        <input id="d-dir" class="input-text" type="text" readonly
+                        <label class="label-normal">DirecciÃ³n</label>
+                        <input id="d-dir" class="input-text input-readonly" type="text" readonly
                                value="{{ proyecto.cliente_direccion or '' }}"
-                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                               >
                     </div>
 
                     <div class="div-form-group">
-                        <label class="label-normal">Ubicación Geográfica</label>
-                        <input id="d-ubic" class="input-text" type="text" readonly
+                        <label class="label-normal">UbicaciÃ³n GeogrÃ¡fica</label>
+                        <input id="d-ubic" class="input-text input-readonly" type="text" readonly
                                value="{{ proyecto.cliente_ubicacion or '' }}"
-                               style="background: var(--color-fondo-secundario); color: var(--color-texto-claro); cursor: not-allowed;">
+                               >
                     </div>
                 </div>
             </div>
 
             <!-- Estado y Agente -->
-            <div style="border-top: 1px solid var(--color-borde); padding-top: var(--espaciado-md); margin-top: var(--espaciado-md);">
-                <h3 style="font-size: 1.05rem; font-weight: 600; color: var(--color-secundario); margin-bottom: var(--espaciado-md);">
-                    Configuración del Proyecto
+            <div class="border-t pt-md mt-md">
+                <h3 class="text-lg font-600 text-secundario mb-md">
+                    ConfiguraciÃ³n del Proyecto
                 </h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--espaciado-md);">
+                <div class="grid grid-auto-fit gap-md">
                     <div class="div-form-group">
                         <label class="label-required">Estado</label>
                         <select name="estado" class="input-text">
@@ -167,10 +162,9 @@
             </div>
 
             <!-- Botones -->
-            <div class="form-actions" style="margin-top: var(--espaciado-lg);">
+            <div class="form-actions">
                 <a href="{{ url_for('proyectos.ver_proyecto', pk=proyecto.id) }}" class="btn btn-outline">Cancelar</a>
-                <button type="submit" id="btn-submit" class="btn btn-primary">
-                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" alt="Guardar" class="icon-sm mr-xs">
+                <button type="submit" id="btn-submit" class="btn btn-primary btn-icon-save">
                     Guardar Cambios
                 </button>
             </div>
@@ -233,12 +227,12 @@
     async function buscarCliente() {
         const codigo = inputCod.value.trim();
         if (!codigo) {
-            showAlert('Ingresa un código de cliente.', 'error');
+            showAlert('Ingresa un cÃ³digo de cliente.', 'error');
             return;
         }
         alertBox.style.display = 'none';
         btnBuscar.disabled = true;
-        btnBuscar.textContent = '⏳ Buscando…';
+        btnBuscar.textContent = 'â³ Buscandoâ€¦';
 
         try {
             const resp = await fetch(`{{ url_for('proyectos.buscar_cliente_erp') }}?codigo=${encodeURIComponent(codigo)}`);
@@ -253,7 +247,7 @@
             showAlert('Error de red. Intenta de nuevo.', 'error');
         } finally {
             btnBuscar.disabled = false;
-            btnBuscar.innerHTML = `<img src="{{ url_for('static', filename='img/icons/informacion.png') }}" class="icon-sm" alt="Buscar"> Buscar Cliente`;
+            btnBuscar.textContent = 'Buscar Cliente';
         }
     }
 

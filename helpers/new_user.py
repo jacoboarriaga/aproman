@@ -21,7 +21,7 @@ def crear_superusuario():
         cursor.execute("""
             INSERT INTO usuarios (username, password, nombre, email, rol, is_active, fecha_registro)
             VALUES (?, ?, ?, ?, ?, 1, GETDATE())
-        """, (username, password_encriptada, nombre, 'admin@megacolor.com', rol))
+        """, (username, password_encriptada, nombre, 'admin@aplicacionesprocolor.com', rol))
         
         conn.commit()
         print(f"¡Éxito! Usuario '{username}' creado correctamente.")

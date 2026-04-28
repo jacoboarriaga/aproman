@@ -23,6 +23,9 @@ materiales_bp = Blueprint('materiales', __name__, url_prefix='/materiales')
 @login_required
 @requiere_rol('administrador')
 def listado_materiales():
+    flash("Los materiales ahora se controlan desde Inventario.", "info")
+    return redirect(url_for('inventario.listado_inventario'))
+
     """Muestra el catálogo completo de materiales ordenados por ID descendente."""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -48,6 +51,9 @@ def listado_materiales():
 @login_required
 @requiere_rol('administrador')
 def crear_material():
+    flash("Ahora registra materiales desde Inventario.", "info")
+    return redirect(url_for('inventario.nuevo_material'))
+
     """Formulario para registrar un nuevo material en el catálogo."""
     if request.method == 'POST':
         nombre = request.form.get('nombre').strip()
@@ -84,6 +90,9 @@ def crear_material():
 @login_required
 @requiere_rol('administrador')
 def editar_material(id):
+    flash("Ahora administra materiales desde Inventario.", "info")
+    return redirect(url_for('inventario.listado_inventario'))
+
     """Formulario para editar el nombre de un material existente."""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -126,6 +135,9 @@ def editar_material(id):
 @login_required
 @requiere_rol('administrador')
 def eliminar_material(id):
+    flash("Ahora administra materiales desde Inventario.", "info")
+    return redirect(url_for('inventario.listado_inventario'))
+
     """Confirmación y eliminación de un material del catálogo."""
     conn = get_db_connection()
     cursor = conn.cursor()

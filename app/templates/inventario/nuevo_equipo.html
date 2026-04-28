@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Nuevo Equipo - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/agregar.png') }}" alt="Nuevo" class="icon-lg">
+        Nuevo Equipo
+    </h1>
+    <p class="dashboard-subtitle">Registra herramientas, andamios o maquinaria.</p>
+</div>
+
+<div class="mb-lg">
+    <a href="{{ url_for('inventario.listado_inventario') }}" class="btn btn-outline">Volver a Existencias</a>
+</div>
+
+<div class="card card-form">
+    <div class="card-header">
+        <h2 class="card-title">Datos del Equipo</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('inventario.nuevo_equipo') }}">
+            <div class="form-grid">
+                <div class="div-form-group">
+                    <label>Codigo asignado</label>
+                    <input class="input-text" type="text" value="{{ codigo_sugerido or 'E-001' }}" readonly tabindex="-1">
+                </div>
+                <div class="div-form-group">
+                    <label class="label-required">Categoria</label>
+                    <select class="input-text" name="categoria" required>
+                        <option value="Equipo">Equipo</option>
+                        <option value="Herramienta">Herramienta</option>
+                    </select>
+                </div>
+                <div class="div-form-group col-full">
+                    <label class="label-required">Nombre del Equipo</label>
+                    <input class="input-text" type="text" name="nombre" maxlength="250" required placeholder="Ej. Maquina Airless Graco 390">
+                </div>
+                <div class="div-form-group">
+                    <label>Cantidad Inicial</label>
+                    <input class="input-text numeric-input" type="number" name="cantidad_inicial" step="1" min="0" value="1">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-icon-save">
+                    Guardar Equipo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

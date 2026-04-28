@@ -122,33 +122,52 @@ def ver_sistema(id):
         columnas = [column[0] for column in cursor.description]
         sistema = dict(zip(columnas, row))
 
-        # Pintores asignados al sistema
+        # Pintores asignados al sistema usando la nueva cabecera general de asignaciones
         cursor.execute("""
-            SELECT a.*, t.nombre as pintor_nombre,
-                   CONVERT(VARCHAR, a.fecha_registro, 103) as fecha_formateada
-            FROM asignacion_pintor a
-            INNER JOIN pintores t ON a.pintor_id = t.id
-            WHERE a.sistema_id = ?
-            ORDER BY a.id DESC
+            SELECT dap.*, a.sistema_id, a.proyecto_id, a.estado as asignacion_estado,
+                   a.fecha_asignacion as fecha_registro,
+                   CONVERT(VARCHAR, a.fecha_asignacion, 103) as fecha_formateada,
+                   t.nombre as pintor_nombre
+            FROM detalle_asignacion_pintor dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            INNER JOIN pintores t ON dap.pintor_id = t.id
+            WHERE a.sistema_id = ? AND a.tipo = 'pintor' AND a.estado <> 'anulada'
+            ORDER BY dap.id DESC
         """, (id,))
         col_pers = [column[0] for column in cursor.description]
         personal = [dict(zip(col_pers, r)) for r in cursor.fetchall()]
 
         total_personal = sum(float(p['costo_total'] or 0) for p in personal)
 
-        # Materiales asignados al sistema
+        # Inventario asignado desde bodega interna
         cursor.execute("""
-            SELECT am.*, m.nombre as material_nombre,
-                   CONVERT(VARCHAR, am.fecha_registro, 103) as fecha_formateada
-            FROM asignacion_material am
-            INNER JOIN materiales m ON am.material_id = m.id
-            WHERE am.sistema_id = ?
-            ORDER BY am.id DESC
+            SELECT dap.*, a.estado as asignacion_estado,
+                   a.fecha_asignacion as fecha_registro,
+                   CONVERT(VARCHAR, a.fecha_asignacion, 103) as fecha_formateada,
+                   p.nombre as producto_nombre, p.codigo, p.cod_producto_erp, p.categoria, p.unidad_medida,
+                   (dap.cantidad_asignada - dap.cantidad_consumida - dap.cantidad_devuelta) as cantidad_pendiente
+            FROM detalle_asignacion_producto dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            INNER JOIN productos p ON dap.producto_id = p.id
+            WHERE a.sistema_id = ? AND a.tipo = 'producto' AND a.estado <> 'anulada'
+            ORDER BY dap.id DESC
         """, (id,))
-        col_mat = [column[0] for column in cursor.description]
-        materiales = [dict(zip(col_mat, r)) for r in cursor.fetchall()]
+        col_prod = [column[0] for column in cursor.description]
+        productos_asignados = [dict(zip(col_prod, r)) for r in cursor.fetchall()]
 
-        total_materiales = sum(float(m['costo_material'] or 0) for m in materiales)
+        # Gastos variables del sistema
+        cursor.execute("""
+            SELECT g.*, c.nombre as categoria_nombre,
+                   CONVERT(VARCHAR, g.fecha_gasto, 103) as fecha_formateada
+            FROM gastos g
+            INNER JOIN categorias_gasto c ON g.categoria_id = c.id
+            WHERE g.sistema_id = ?
+            ORDER BY g.fecha_gasto DESC, g.id DESC
+        """, (id,))
+        col_gastos = [column[0] for column in cursor.description]
+        gastos = [dict(zip(col_gastos, r)) for r in cursor.fetchall()]
+
+        total_gastos = sum(float(g['monto'] or 0) for g in gastos)
 
     except Exception as e:
         print(f"Error al cargar sistema: {e}")
@@ -157,54 +176,14 @@ def ver_sistema(id):
     finally:
         conn.close()
 
-    # --- Cargar Solicitudes de Producto (Desde el ERP) ---
-    solicitudes_pintura = []
-    try:
-        from app.utils import get_erp_connection
-        conn_erp = get_erp_connection()
-        cursor_erp = conn_erp.cursor()
-        
-        # Filtramos por el ID Ãºnico del sistema para evitar duplicidad de nombres en el mismo proyecto
-        descripcion_busqueda = f"ID:{sistema.get('id')} |%"
-
-        cursor_erp.execute("""
-            SELECT 
-                d.NUM_DOCUMENTO,
-                CONVERT(VARCHAR, d.FECHA_DOCUMENTO, 103) AS fecha_doc,
-                det.COD_PRODUCTO,
-                RTRIM(p.NOMBRE_PRODUCTO) AS nombre_producto,
-                RTRIM(det.UNIDAD_MEDIDA) AS unidad_medida,
-                det.CANTIDAD,
-                p.costo_promedio,
-                pr.PRECIO_UNITARIO AS precio_unitario
-            FROM sysadm.IN_DOCUMENTO d
-            JOIN sysadm.IN_DET_DOCUMENTO det
-                ON d.NUM_EMPRESA = det.NUM_EMPRESA
-                AND d.TIPO_DOCUMENTO = det.TIPO_DOCUMENTO
-                AND d.CORRELATIVO = det.CORRELATIVO
-            JOIN sysadm.IN_PRODUCTOS p
-                ON det.COD_PRODUCTO = p.COD_PRODUCTO
-            LEFT JOIN sysadm.IN_PRECIOS_TIPOCLT pr 
-                ON p.COD_PRODUCTO = pr.COD_PRODUCTO AND pr.TIPO_CLIENTE = 10
-            WHERE d.DESCRIPCION LIKE ? AND d.STATUS_DOCUMENTO = 'R'
-            ORDER BY d.FECHA_DOCUMENTO DESC, d.NUM_DOCUMENTO DESC
-        """, (descripcion_busqueda,))
-        
-        cols = [column[0] for column in cursor_erp.description]
-        solicitudes_pintura = [dict(zip(cols, r)) for r in cursor_erp.fetchall()]
-    except Exception as e:
-        print(f"Error al cargar solicitudes del ERP: {e}")
-    finally:
-        if 'conn_erp' in locals():
-            conn_erp.close()
-
     return render_template('sistemas/ver_sistema.html',
                            sistema=sistema,
                            personal=personal,
                            total_personal=total_personal,
-                           total_materiales=total_materiales,
-                           materiales=materiales,
-                           solicitudes_pintura=solicitudes_pintura,
+                           total_materiales=total_gastos,
+                           total_gastos=total_gastos,
+                           productos_asignados=productos_asignados,
+                           gastos=gastos,
                            puede_ver_costos=puede_ver_costos)
 
 
@@ -316,7 +295,7 @@ def cambiar_estado(id):
 @login_required
 @requiere_rol('administrador')
 def eliminar_sistema(id):
-    """Elimina el sistema solo si no tiene pintores, materiales, ni productos ERP asignados."""
+    """Elimina el sistema solo si no tiene asignaciones, gastos ni productos internos."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -334,15 +313,18 @@ def eliminar_sistema(id):
             flash("Sistema no encontrado.", "error")
             return redirect(url_for('proyectos.mis_proyectos'))
 
-        # Validar dependencias locales
-        cursor.execute("SELECT COUNT(*) FROM asignacion_pintor WHERE sistema_id = ?", (id,))
-        count_pintores = cursor.fetchone()[0]
+        # Validar dependencias locales nuevas
+        cursor.execute("SELECT COUNT(*) FROM asignaciones WHERE sistema_id = ? AND estado <> 'anulada'", (id,))
+        count_asignaciones = cursor.fetchone()[0]
 
-        cursor.execute("SELECT COUNT(*) FROM asignacion_material WHERE sistema_id = ?", (id,))
-        count_materiales = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM gastos WHERE sistema_id = ?", (id,))
+        count_gastos = cursor.fetchone()[0]
 
-        if count_pintores > 0 or count_materiales > 0:
-            flash("No puedes eliminar un sistema que ya tiene pintores o materiales registrados.", "error")
+        cursor.execute("SELECT COUNT(*) FROM movimientos WHERE sistema_id = ?", (id,))
+        count_movimientos = cursor.fetchone()[0]
+
+        if count_asignaciones > 0 or count_gastos > 0 or count_movimientos > 0:
+            flash("No puedes eliminar un sistema que ya tiene asignaciones, gastos o movimientos registrados.", "error")
             return redirect(url_for('sistemas.ver_sistema', id=id))
 
         # Validar dependencias ERP
@@ -360,7 +342,7 @@ def eliminar_sistema(id):
                 return redirect(url_for('sistemas.ver_sistema', id=id))
         except Exception as e_erp:
             print(f"Error al conectar con ERP para verificar eliminaciÃ³n: {e_erp}")
-            flash("No pudimos conectar con el ERP para confirmar las solicitudes. EliminaciÃ³n bloqueada por seguridad.", "error")
+            flash("No pudimos conectar con bodega para confirmar las solicitudes. EliminaciÃ³n bloqueada por seguridad.", "error")
             return redirect(url_for('sistemas.ver_sistema', id=id))
 
         # Eliminar
@@ -427,9 +409,10 @@ def finalizar_sistema(id):
             return redirect(url_for('sistemas.ver_sistema', id=id))
 
         cursor.execute("""
-            SELECT ISNULL(SUM(pago_dia * dias_trabajados), 0)
-            FROM asignacion_pintor
-            WHERE sistema_id = ?
+            SELECT ISNULL(SUM(dap.costo_total), 0)
+            FROM detalle_asignacion_pintor dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            WHERE a.sistema_id = ? AND a.tipo = 'pintor' AND a.estado <> 'anulada'
         """, (id,))
         total_personal = cursor.fetchone()[0]
 
@@ -453,6 +436,8 @@ def asignar_pintor(sistema_id):
     """Formulario para asignar un pintor del catalogo a un sistema activo."""
     conn = get_db_connection()
     cursor = conn.cursor()
+    sistema = None
+    pintores = []
 
     try:
         cursor.execute(
@@ -484,10 +469,18 @@ def asignar_pintor(sistema_id):
             costo_total = pago_dia * dias_trabajados
 
             cursor.execute("""
-                INSERT INTO asignacion_pintor
-                (sistema_id, pintor_id, pago_dia, dias_trabajados, costo_total, fechas_especificas, fecha_registro)
-                VALUES (?, ?, ?, ?, ?, ?, GETDATE())
-            """, (sistema_id, pintor_id, pago_dia, dias_trabajados, costo_total, fechas_especificas))
+                INSERT INTO asignaciones
+                (proyecto_id, sistema_id, tipo, estado, creado_por, fecha_asignacion)
+                OUTPUT inserted.id
+                VALUES (?, ?, 'pintor', 'activa', ?, GETDATE())
+            """, (sis_row.proyecto_id, sistema_id, current_user.id))
+            asignacion_id = cursor.fetchone()[0]
+
+            cursor.execute("""
+                INSERT INTO detalle_asignacion_pintor
+                (asignacion_id, pintor_id, pago_dia, dias_trabajados, costo_total, fechas_especificas)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (asignacion_id, pintor_id, pago_dia, dias_trabajados, costo_total, fechas_especificas))
 
             conn.commit()
             flash("Pintor asignado exitosamente al sistema.", "success")
@@ -499,6 +492,9 @@ def asignar_pintor(sistema_id):
         flash("Error al realizar la asignaciÃ³n.", "error")
     finally:
         conn.close()
+
+    if not sistema:
+        return redirect(url_for('proyectos.mis_proyectos'))
 
     return render_template('sistemas/asignar_pintor.html',
                            sistema=sistema,
@@ -515,15 +511,18 @@ def editar_asignacion_pintor(id):
     """Formulario para editar o eliminar una asignacion de pintor en un sistema."""
     conn = get_db_connection()
     cursor = conn.cursor()
+    asignacion = None
 
     try:
-        # Traer la asignacion con datos del pintor y sistema
+        # Traer el detalle de asignacion con datos del pintor y sistema
         cursor.execute("""
-            SELECT a.*, t.nombre as pintor_nombre, s.sistema_nombre, s.proyecto_id, s.estado as sistema_estado
-            FROM asignacion_pintor a
-            INNER JOIN pintores t ON a.pintor_id = t.id
+            SELECT dap.*, a.sistema_id, a.proyecto_id, a.estado as asignacion_estado,
+                   t.nombre as pintor_nombre, s.sistema_nombre, s.estado as sistema_estado
+            FROM detalle_asignacion_pintor dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            INNER JOIN pintores t ON dap.pintor_id = t.id
             INNER JOIN sistemas s ON a.sistema_id = s.id
-            WHERE a.id = ?
+            WHERE dap.id = ?
         """, (id,))
         row = cursor.fetchone()
 
@@ -543,7 +542,7 @@ def editar_asignacion_pintor(id):
 
             if accion == 'eliminar':
                 # Retirar pintor del sistema
-                cursor.execute("DELETE FROM asignacion_pintor WHERE id = ?", (id,))
+                cursor.execute("UPDATE asignaciones SET estado = 'anulada', fecha_cierre = GETDATE() WHERE id = ?", (asignacion['asignacion_id'],))
                 conn.commit()
                 flash("Pintor retirado del sistema correctamente.", "success")
                 return redirect(url_for('sistemas.ver_sistema', id=asignacion['sistema_id']))
@@ -556,7 +555,7 @@ def editar_asignacion_pintor(id):
                 costo_total = pago_dia * dias_trabajados
 
                 cursor.execute("""
-                    UPDATE asignacion_pintor
+                    UPDATE detalle_asignacion_pintor
                     SET pago_dia = ?, dias_trabajados = ?, costo_total = ?, fechas_especificas = ?
                     WHERE id = ?
                 """, (pago_dia, dias_trabajados, costo_total, fechas_especificas, id))
@@ -569,6 +568,7 @@ def editar_asignacion_pintor(id):
         conn.rollback()
         print(f"Error al editar asignacion de pintor: {e}")
         flash("Error al actualizar la asignacion.", "error")
+        return redirect(url_for('proyectos.mis_proyectos'))
     finally:
         conn.close()
 
@@ -582,9 +582,33 @@ def editar_asignacion_pintor(id):
 @login_required
 @requiere_rol('administrador')
 def asignar_material(sistema_id):
-    """Formulario para asignar un material del catÃ¡logo a un sistema activo."""
+    """Asigna productos disponibles de la bodega interna a un sistema activo."""
     conn = get_db_connection()
     cursor = conn.cursor()
+    sistema = None
+    productos = []
+    registros_tipo = []
+    bodega = None
+    tipo_inventario = request.args.get('tipo', 'producto').strip().lower()
+    tipos_inventario = {
+        'producto': {
+            'titulo': 'Producto',
+            'categorias': ['PRODUCTO', 'PINTURA', 'BODEGA', 'ERP', ''],
+            'prefijos': []
+        },
+        'material': {
+            'titulo': 'Material',
+            'categorias': ['MATERIAL', 'MATERIALES', 'CONSUMIBLE', 'CONSUMIBLES'],
+            'prefijos': ['M-%']
+        },
+        'equipo': {
+            'titulo': 'Equipo',
+            'categorias': ['EQUIPO', 'EQUIPOS', 'HERRAMIENTA', 'HERRAMIENTAS'],
+            'prefijos': ['E-%']
+        }
+    }
+    if tipo_inventario not in tipos_inventario:
+        tipo_inventario = 'producto'
 
     try:
         cursor.execute(
@@ -598,44 +622,115 @@ def asignar_material(sistema_id):
             return redirect(url_for('proyectos.mis_proyectos'))
 
         if sis_row.estado != 'activo':
-            flash("SÃ³lo puedes asignar materiales a sistemas activos.", "warning")
+            flash("Solo puedes asignar inventario a sistemas activos.", "warning")
             return redirect(url_for('sistemas.ver_sistema', id=sistema_id))
 
         sistema = {'id': sis_row.id, 'nombre': sis_row.sistema_nombre, 'proyecto_id': sis_row.proyecto_id}
 
-        # Lista de materiales disponibles del catÃ¡logo
-        cursor.execute("SELECT id, nombre FROM materiales ORDER BY nombre ASC")
-        catalogo_materiales = [{'id': row[0], 'nombre': row[1]} for row in cursor.fetchall()]
+        cursor.execute("""
+            SELECT TOP 1 id, nombre
+            FROM bodegas
+            WHERE activa = 1 AND tipo = 'interna'
+            ORDER BY id ASC
+        """)
+        bodega_row = cursor.fetchone()
+        if not bodega_row:
+            flash("Debes crear una bodega interna activa antes de asignar inventario.", "error")
+            return redirect(url_for('sistemas.ver_sistema', id=sistema_id))
+
+        bodega = {'id': bodega_row.id, 'nombre': bodega_row.nombre}
+
+        tipo_config = tipos_inventario[tipo_inventario]
+        categorias = tipo_config['categorias']
+        prefijos = tipo_config['prefijos']
+        condiciones = ["UPPER(LTRIM(RTRIM(ISNULL(categoria, '')))) IN ({})".format(', '.join(['?'] * len(categorias)))]
+        params_filtro = list(categorias)
+        for _ in prefijos:
+            condiciones.append("UPPER(LTRIM(RTRIM(ISNULL(codigo, '')))) LIKE ?")
+        params_filtro.extend(prefijos)
+
+        cursor.execute("""
+            SELECT producto_id as id, codigo, nombre, categoria, cod_producto_erp, unidad_medida, stock_disponible
+            FROM v_stock_productos
+            WHERE bodega_id = ?
+              AND ({})
+            ORDER BY nombre ASC
+        """.format(' OR '.join(condiciones)), [bodega['id']] + params_filtro)
+        registros_tipo = [dict(zip([c[0] for c in cursor.description], row)) for row in cursor.fetchall()]
+        productos = [p for p in registros_tipo if float(p.get('stock_disponible') or 0) > 0]
 
         if request.method == 'POST':
-            material_id = request.form.get('material_id')
+            producto_id = request.form.get('producto_id')
+            cantidad = float(request.form.get('cantidad') or 0)
+            observaciones = request.form.get('observaciones', '').strip()[:500] or None
 
-            # El checkbox "Â¿Genera costo?" es solo un toggle visual, NO se guarda en BD.
-            # Si vino marcado, se capturan los valores; si no, se guardan como NULL.
-            genera_costo   = request.form.get('genera_costo') == '1'
-            costo_material = float(request.form.get('costo_material') or 0) if genera_costo else None
-            descripcion    = request.form.get('descripcion', '').strip()[:200] or None if genera_costo else None
+            if not producto_id or cantidad <= 0:
+                flash("Debes seleccionar un registro e indicar una cantidad valida.", "warning")
+                return render_template('sistemas/asignar_material.html',
+                                       sistema=sistema, productos=productos, bodega=bodega,
+                                       tipo_inventario=tipo_inventario, tipos_inventario=tipos_inventario,
+                                       registros_tipo=registros_tipo)
 
             cursor.execute("""
-                INSERT INTO asignacion_material
-                (sistema_id, material_id, costo_material, descripcion)
-                VALUES (?, ?, ?, ?)
-            """, (sistema_id, material_id, costo_material, descripcion))
+                SELECT stock_disponible
+                FROM v_stock_productos
+                WHERE producto_id = ? AND bodega_id = ?
+            """, (producto_id, bodega['id']))
+            stock_row = cursor.fetchone()
+            stock_disponible = float(stock_row.stock_disponible) if stock_row else 0.0
+
+            if cantidad > stock_disponible:
+                flash("La cantidad solicitada supera las existencias disponibles.", "warning")
+                return render_template('sistemas/asignar_material.html',
+                                       sistema=sistema, productos=productos, bodega=bodega,
+                                       tipo_inventario=tipo_inventario, tipos_inventario=tipos_inventario,
+                                       registros_tipo=registros_tipo)
+
+            cursor.execute("""
+                INSERT INTO asignaciones
+                (proyecto_id, sistema_id, tipo, bodega_origen_id, estado, observaciones, creado_por, fecha_asignacion)
+                OUTPUT inserted.id
+                VALUES (?, ?, 'producto', ?, 'activa', ?, ?, GETDATE())
+            """, (sis_row.proyecto_id, sistema_id, bodega['id'], observaciones, current_user.id))
+            asignacion_id = cursor.fetchone()[0]
+
+            cursor.execute("""
+                INSERT INTO detalle_asignacion_producto
+                (asignacion_id, producto_id, cantidad_asignada, cantidad_consumida, cantidad_devuelta)
+                OUTPUT inserted.id
+                VALUES (?, ?, ?, 0, 0)
+            """, (asignacion_id, producto_id, cantidad))
+            detalle_id = cursor.fetchone()[0]
+
+            cursor.execute("""
+                INSERT INTO movimientos
+                (producto_id, bodega_id, tipo, cantidad, asignacion_id, detalle_asignacion_producto_id,
+                 proyecto_id, sistema_id, observacion, usuario_id, fecha_movimiento)
+                VALUES (?, ?, 'asignacion', ?, ?, ?, ?, ?, ?, ?, GETDATE())
+            """, (producto_id, bodega['id'], cantidad, asignacion_id, detalle_id,
+                  sis_row.proyecto_id, sistema_id, observaciones, current_user.id))
 
             conn.commit()
-            flash("Material asignado exitosamente al sistema.", "success")
+            flash("{} asignado exitosamente al sistema.".format(tipos_inventario[tipo_inventario]['titulo']), "success")
             return redirect(url_for('sistemas.ver_sistema', id=sistema_id))
 
     except Exception as e:
         conn.rollback()
-        print(f"Error al asignar material al sistema: {e}")
-        flash("Error al realizar la asignaciÃ³n de material.", "error")
+        print(f"Error al asignar inventario al sistema: {e}")
+        flash("Error al realizar la asignacion de inventario.", "error")
     finally:
         conn.close()
 
+    if not sistema or not bodega:
+        return redirect(url_for('proyectos.mis_proyectos'))
+
     return render_template('sistemas/asignar_material.html',
                            sistema=sistema,
-                           catalogo_materiales=catalogo_materiales)
+                           productos=productos,
+                           bodega=bodega,
+                           tipo_inventario=tipo_inventario,
+                           tipos_inventario=tipos_inventario,
+                           registros_tipo=registros_tipo)
 
 
 # -----------------------------------------------
@@ -645,73 +740,205 @@ def asignar_material(sistema_id):
 @login_required
 @requiere_rol('administrador')
 def editar_asignacion_material(id):
-    """Formulario para editar o eliminar una asignaciÃ³n de material en un sistema."""
+    """Registra consumo, devolucion o anulacion de una asignacion de producto."""
     conn = get_db_connection()
     cursor = conn.cursor()
+    asignacion = None
 
     try:
         cursor.execute("""
-            SELECT am.*, m.nombre as material_nombre, s.sistema_nombre, s.proyecto_id, s.estado as sistema_estado,
-                   CONVERT(VARCHAR, am.fecha_registro, 103) as fecha_formateada
-            FROM asignacion_material am
-            INNER JOIN materiales m ON am.material_id = m.id
-            INNER JOIN sistemas s ON am.sistema_id = s.id
-            WHERE am.id = ?
+            SELECT dap.*, a.sistema_id, a.proyecto_id, a.bodega_origen_id, a.estado as asignacion_estado,
+                   s.sistema_nombre, s.estado as sistema_estado,
+                   p.nombre as producto_nombre, p.unidad_medida, p.codigo, p.cod_producto_erp
+            FROM detalle_asignacion_producto dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            INNER JOIN sistemas s ON a.sistema_id = s.id
+            INNER JOIN productos p ON dap.producto_id = p.id
+            WHERE dap.id = ?
         """, (id,))
         row = cursor.fetchone()
 
         if not row:
-            flash("AsignaciÃ³n de material no encontrada.", "error")
+            flash("Asignacion de producto no encontrada.", "error")
             return redirect(url_for('proyectos.mis_proyectos'))
 
         columnas = [column[0] for column in cursor.description]
         asignacion = dict(zip(columnas, row))
 
         if asignacion['sistema_estado'] != 'activo':
-            flash("No puedes editar asignaciones de un sistema que no estÃ¡ activo.", "warning")
+            flash("No puedes editar asignaciones de un sistema que no esta activo.", "warning")
             return redirect(url_for('sistemas.ver_sistema', id=asignacion['sistema_id']))
-
-        # Lista de materiales disponibles del catÃ¡logo
-        cursor.execute("SELECT id, nombre FROM materiales ORDER BY nombre ASC")
-        catalogo_materiales = [{'id': row[0], 'nombre': row[1]} for row in cursor.fetchall()]
 
         if request.method == 'POST':
             accion = request.form.get('accion', 'guardar')
 
             if accion == 'eliminar':
-                cursor.execute("DELETE FROM asignacion_material WHERE id = ?", (id,))
+                pendiente = float(asignacion['cantidad_asignada'] or 0) - float(asignacion['cantidad_consumida'] or 0) - float(asignacion['cantidad_devuelta'] or 0)
+                if pendiente > 0:
+                    cursor.execute("""
+                        INSERT INTO movimientos
+                        (producto_id, bodega_id, tipo, cantidad, asignacion_id, detalle_asignacion_producto_id,
+                         proyecto_id, sistema_id, observacion, usuario_id, fecha_movimiento)
+                        VALUES (?, ?, 'devolucion', ?, ?, ?, ?, ?, 'Anulacion de asignacion', ?, GETDATE())
+                    """, (asignacion['producto_id'], asignacion['bodega_origen_id'], pendiente,
+                          asignacion['asignacion_id'], id, asignacion['proyecto_id'],
+                          asignacion['sistema_id'], current_user.id))
+                cursor.execute("UPDATE detalle_asignacion_producto SET cantidad_devuelta = cantidad_asignada - cantidad_consumida WHERE id = ?", (id,))
+                cursor.execute("UPDATE asignaciones SET estado = 'anulada', fecha_cierre = GETDATE() WHERE id = ?", (asignacion['asignacion_id'],))
                 conn.commit()
-                flash("Material retirado del sistema correctamente.", "success")
+                flash("Producto retirado del sistema correctamente.", "success")
                 return redirect(url_for('sistemas.ver_sistema', id=asignacion['sistema_id']))
 
-            else:
-                material_id = request.form.get('material_id')
-                
-                # El checkbox "Â¿Genera costo?" es solo un toggle visual en el frontend
-                genera_costo   = request.form.get('genera_costo') == '1'
-                costo_material = float(request.form.get('costo_material') or 0) if genera_costo else None
-                descripcion    = request.form.get('descripcion', '').strip()[:200] or None if genera_costo else None
+            nueva_consumida = float(request.form.get('cantidad_consumida') or 0)
+            nueva_devuelta = float(request.form.get('cantidad_devuelta') or 0)
+            observacion = request.form.get('observacion', '').strip()[:500] or None
 
+            asignada = float(asignacion['cantidad_asignada'] or 0)
+            consumida_anterior = float(asignacion['cantidad_consumida'] or 0)
+            devuelta_anterior = float(asignacion['cantidad_devuelta'] or 0)
+
+            if nueva_consumida < 0 or nueva_devuelta < 0 or nueva_consumida + nueva_devuelta > asignada:
+                flash("La suma de consumo y devolucion no puede superar lo asignado.", "warning")
+                return render_template('sistemas/editar_asignacion_material.html', asignacion=asignacion)
+
+            delta_consumo = nueva_consumida - consumida_anterior
+            delta_devolucion = nueva_devuelta - devuelta_anterior
+
+            if delta_consumo < 0 or delta_devolucion < 0:
+                flash("Por trazabilidad, no se puede reducir consumo o devolucion ya registrada. Usa un ajuste desde inventario si necesitas corregir.", "warning")
+                return render_template('sistemas/editar_asignacion_material.html', asignacion=asignacion)
+
+            cursor.execute("""
+                UPDATE detalle_asignacion_producto
+                SET cantidad_consumida = ?, cantidad_devuelta = ?
+                WHERE id = ?
+            """, (nueva_consumida, nueva_devuelta, id))
+
+            if delta_consumo > 0:
                 cursor.execute("""
-                    UPDATE asignacion_material
-                    SET material_id = ?, costo_material = ?, descripcion = ?
-                    WHERE id = ?
-                """, (material_id, costo_material, descripcion, id))
+                    INSERT INTO movimientos
+                    (producto_id, bodega_id, tipo, cantidad, asignacion_id, detalle_asignacion_producto_id,
+                     proyecto_id, sistema_id, observacion, usuario_id, fecha_movimiento)
+                    VALUES (?, NULL, 'consumo', ?, ?, ?, ?, ?, ?, ?, GETDATE())
+                """, (asignacion['producto_id'], delta_consumo, asignacion['asignacion_id'],
+                      id, asignacion['proyecto_id'], asignacion['sistema_id'],
+                      observacion, current_user.id))
 
-                conn.commit()
-                flash("AsignaciÃ³n de material actualizada exitosamente.", "success")
-                return redirect(url_for('sistemas.ver_sistema', id=asignacion['sistema_id']))
+            if delta_devolucion > 0:
+                cursor.execute("""
+                    INSERT INTO movimientos
+                    (producto_id, bodega_id, tipo, cantidad, asignacion_id, detalle_asignacion_producto_id,
+                     proyecto_id, sistema_id, observacion, usuario_id, fecha_movimiento)
+                    VALUES (?, ?, 'devolucion', ?, ?, ?, ?, ?, ?, ?, GETDATE())
+                """, (asignacion['producto_id'], asignacion['bodega_origen_id'], delta_devolucion,
+                      asignacion['asignacion_id'], id, asignacion['proyecto_id'],
+                      asignacion['sistema_id'], observacion, current_user.id))
+
+            if nueva_consumida + nueva_devuelta == asignada:
+                cursor.execute("UPDATE asignaciones SET estado = 'cerrada', fecha_cierre = GETDATE() WHERE id = ?", (asignacion['asignacion_id'],))
+
+            conn.commit()
+            flash("Asignacion de producto actualizada exitosamente.", "success")
+            return redirect(url_for('sistemas.ver_sistema', id=asignacion['sistema_id']))
 
     except Exception as e:
         conn.rollback()
-        print(f"Error al editar asignaciÃ³n material: {e}")
-        flash("Error al actualizar la asignaciÃ³n de material.", "error")
+        print(f"Error al editar asignacion producto: {e}")
+        flash("Error al actualizar la asignacion de producto.", "error")
+        return redirect(url_for('proyectos.mis_proyectos'))
     finally:
         conn.close()
 
     return render_template('sistemas/editar_asignacion_material.html', 
-                           asignacion=asignacion,
-                           catalogo_materiales=catalogo_materiales)
+                           asignacion=asignacion)
+
+
+# -----------------------------------------------
+# 8.5 REGISTRAR GASTO VARIABLE
+# -----------------------------------------------
+@sistemas_bp.route('/<int:sistema_id>/gasto/nuevo', methods=['GET', 'POST'])
+@login_required
+@requiere_rol('administrador')
+def registrar_gasto(sistema_id):
+    """Registra costos variables como comida, transporte o combustible."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    sistema = None
+    categorias = []
+
+    try:
+        cursor.execute(
+            "SELECT id, estado, proyecto_id, sistema_nombre FROM sistemas WHERE id = ?",
+            (sistema_id,)
+        )
+        sis_row = cursor.fetchone()
+
+        if not sis_row:
+            flash("Sistema no encontrado.", "error")
+            return redirect(url_for('proyectos.mis_proyectos'))
+
+        if sis_row.estado != 'activo':
+            flash("Solo puedes registrar gastos en sistemas activos.", "warning")
+            return redirect(url_for('sistemas.ver_sistema', id=sistema_id))
+
+        sistema = {
+            'id': sis_row.id,
+            'nombre': sis_row.sistema_nombre,
+            'proyecto_id': sis_row.proyecto_id
+        }
+
+        cursor.execute("""
+            SELECT id, nombre
+            FROM categorias_gasto
+            WHERE activa = 1
+            ORDER BY nombre ASC
+        """)
+        categorias = [{'id': row.id, 'nombre': row.nombre} for row in cursor.fetchall()]
+
+        if request.method == 'POST':
+            categoria_id = request.form.get('categoria_id')
+            descripcion = request.form.get('descripcion', '').strip()[:300]
+            monto = float(request.form.get('monto') or 0)
+            fecha_gasto = request.form.get('fecha_gasto') or None
+
+            if not categoria_id or not descripcion or monto < 0:
+                flash("Categoria, descripcion y monto valido son obligatorios.", "warning")
+                return render_template(
+                    'sistemas/registrar_gasto.html',
+                    sistema=sistema,
+                    categorias=categorias
+                )
+
+            cursor.execute("""
+                INSERT INTO gastos
+                (proyecto_id, sistema_id, categoria_id, descripcion, monto, fecha_gasto, registrado_por, fecha_registro)
+                VALUES (?, ?, ?, ?, ?, ISNULL(?, GETDATE()), ?, GETDATE())
+            """, (
+                sis_row.proyecto_id,
+                sistema_id,
+                categoria_id,
+                descripcion,
+                monto,
+                fecha_gasto,
+                current_user.id
+            ))
+            conn.commit()
+            flash("Gasto variable registrado correctamente.", "success")
+            return redirect(url_for('sistemas.ver_sistema', id=sistema_id))
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Error al registrar gasto variable: {e}")
+        flash("Error al registrar gasto variable.", "error")
+    finally:
+        conn.close()
+
+    if not sistema:
+        return redirect(url_for('proyectos.mis_proyectos'))
+
+    return render_template('sistemas/registrar_gasto.html',
+                           sistema=sistema,
+                           categorias=categorias)
 
 
 # -----------------------------------------------
@@ -721,8 +948,11 @@ def editar_asignacion_material(id):
 @login_required
 @requiere_rol('administrador')
 def solicitar_pintura(sistema_id):
-    """Formulario para hacer una solicitud de producto para un sistema."""
+    """El nuevo flujo de solicitudes vive en el modulo de solicitudes generales."""
+    flash("Las solicitudes ahora se hacen desde Inventario > Solicitudes. Luego asigna el producto al sistema desde bodega.", "info")
+    return redirect(url_for('solicitudes.crear_solicitud'))
 
+    # Flujo anterior conservado temporalmente como referencia durante la migracion.
     # --- Verificar que el sistema existe y estÃ¡ activo (BD Aproman) ---
     conn_ap = get_db_connection()
     cursor_ap = conn_ap.cursor()
@@ -792,7 +1022,7 @@ def solicitar_pintura(sistema_id):
 
     except Exception as e:
         print(f"Error al cargar datos ERP: {e}")
-        flash("Error al cargar datos del ERP (bodegas/empleados).", "error")
+        flash("Error al cargar datos de bodega.", "error")
         bodegas   = []
         empleados = []
     finally:
@@ -953,7 +1183,7 @@ def solicitar_pintura(sistema_id):
                 
                 # Validar existencia del registro mensual
                 if cursor_erp2.rowcount == 0:
-                    raise ValueError(f"No se ha inicializado el registro del mes actual en 'in_productos_x_mes' para {cod} (bodega {cod_bodega}). Revisa cierres/aperturas del ERP.")
+                    raise ValueError(f"No se ha inicializado el registro mensual para {cod} en bodega {cod_bodega}.")
 
             # === 5. Confirmar Toda La TransacciÃ³n ===
             conn_erp2.commit()

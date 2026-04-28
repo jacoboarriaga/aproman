@@ -141,7 +141,7 @@ def buscar_cliente_erp():
         return jsonify({'error': 'El cÃ³digo de cliente debe ser un nÃºmero entero.'}), 400
     except Exception as e:
         print(f"Error consultando cliente ERP: {e}")
-        return jsonify({'error': 'Error al consultar el ERP. Verifica la conexiÃ³n.'}), 500
+        return jsonify({'error': 'Error al consultar el cliente. Verifica la conexion.'}), 500
 
 
 # -----------------------------------------------
@@ -252,15 +252,15 @@ def ver_proyecto(pk):
             flash("No tienes permiso para ver este proyecto.", "error")
             return redirect(url_for('proyectos.mis_proyectos'))
 
-        # Materiales asignados a los sistemas del proyecto
+        # Productos/gastos se manejan en la nueva logica de inventario.
         materiales = []
 
         # Total de personal (sumado desde asignaciones en sistemas)
         cursor.execute("""
-            SELECT ISNULL(SUM(a.costo_total), 0)
-            FROM asignacion_pintor a
-            INNER JOIN sistemas sp ON a.sistema_id = sp.id
-            WHERE sp.proyecto_id = ?
+            SELECT ISNULL(SUM(dap.costo_total), 0)
+            FROM detalle_asignacion_pintor dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            WHERE a.proyecto_id = ? AND a.tipo = 'pintor' AND a.estado <> 'anulada'
         """, (pk,))
         total_personal = float(cursor.fetchone()[0] or 0)
 
@@ -280,10 +280,9 @@ def ver_proyecto(pk):
         sistemas = [dict(zip(col_sist, row)) for row in cursor.fetchall()]
 
         cursor.execute("""
-            SELECT ISNULL(SUM(am.costo_material), 0)
-            FROM asignacion_material am
-            INNER JOIN sistemas s ON am.sistema_id = s.id
-            WHERE s.proyecto_id = ?
+            SELECT ISNULL(SUM(monto), 0)
+            FROM gastos
+            WHERE proyecto_id = ?
         """, (pk,))
         total_materiales = float(cursor.fetchone()[0] or 0)
         todos_sistemas_completados = all(s['estado'] == 'completado' for s in sistemas) if sistemas else False
@@ -373,19 +372,18 @@ def editar_proyecto(pk):
     # Calcular totales para el template
     try:
         cursor.execute("""
-            SELECT ISNULL(SUM(am.costo_material), 0)
-            FROM asignacion_material am
-            INNER JOIN sistemas s ON am.sistema_id = s.id
-            WHERE s.proyecto_id = ?
+            SELECT ISNULL(SUM(monto), 0)
+            FROM gastos
+            WHERE proyecto_id = ?
         """, (pk,))
         total_materiales = float(cursor.fetchone()[0] or 0)
 
-        # Sumar personal desde asignacion_pintor (a travÃ©s de sistemas)
+        # Sumar personal desde asignaciones
         cursor.execute("""
-            SELECT ISNULL(SUM(a.costo_total), 0)
-            FROM asignacion_pintor a
-            INNER JOIN sistemas sp ON a.sistema_id = sp.id
-            WHERE sp.proyecto_id = ?
+            SELECT ISNULL(SUM(dap.costo_total), 0)
+            FROM detalle_asignacion_pintor dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            WHERE a.proyecto_id = ? AND a.tipo = 'pintor' AND a.estado <> 'anulada'
         """, (pk,))
         total_personal = float(cursor.fetchone()[0])
     except Exception as e:
@@ -443,18 +441,27 @@ def eliminar_proyecto(pk):
             return redirect(url_for('proyectos.mis_proyectos'))
 
         if request.method == 'POST':
+            cursor.execute("DELETE FROM movimientos WHERE proyecto_id = ?", (pk,))
+            cursor.execute("DELETE FROM gastos WHERE proyecto_id = ?", (pk,))
             cursor.execute("""
-                DELETE am
-                FROM asignacion_material am
-                INNER JOIN sistemas s ON am.sistema_id = s.id
-                WHERE s.proyecto_id = ?
+                DELETE dap
+                FROM detalle_asignacion_producto dap
+                INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+                WHERE a.proyecto_id = ?
             """, (pk,))
             cursor.execute("""
-                DELETE ap
-                FROM asignacion_pintor ap
-                INNER JOIN sistemas s ON ap.sistema_id = s.id
-                WHERE s.proyecto_id = ?
+                DELETE dap
+                FROM detalle_asignacion_pintor dap
+                INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+                WHERE a.proyecto_id = ?
             """, (pk,))
+            cursor.execute("""
+                DELETE dae
+                FROM detalle_asignacion_equipo dae
+                INNER JOIN asignaciones a ON dae.asignacion_id = a.id
+                WHERE a.proyecto_id = ?
+            """, (pk,))
+            cursor.execute("DELETE FROM asignaciones WHERE proyecto_id = ?", (pk,))
             cursor.execute("DELETE FROM proyectos WHERE id = ?", (pk,))
             conn.commit()
             flash("Proyecto eliminado definitivamente.", "success")
@@ -468,21 +475,20 @@ def eliminar_proyecto(pk):
     # Calcular totales y conteos para la confirmaciÃ³n
     try:
         cursor.execute("""
-            SELECT ISNULL(SUM(am.costo_material), 0), COUNT(am.id)
-            FROM asignacion_material am
-            INNER JOIN sistemas s ON am.sistema_id = s.id
-            WHERE s.proyecto_id = ?
+            SELECT ISNULL(SUM(monto), 0), COUNT(id)
+            FROM gastos
+            WHERE proyecto_id = ?
         """, (pk,))
         mat_data = cursor.fetchone()
         total_materiales = float(mat_data[0])
         total_materiales_count = int(mat_data[1])
 
-        # Contar personal desde asignacion_pintor
+        # Contar personal desde asignaciones
         cursor.execute("""
-            SELECT ISNULL(SUM(a.costo_total), 0), COUNT(a.id)
-            FROM asignacion_pintor a
-            INNER JOIN sistemas sp ON a.sistema_id = sp.id
-            WHERE sp.proyecto_id = ?
+            SELECT ISNULL(SUM(dap.costo_total), 0), COUNT(dap.id)
+            FROM detalle_asignacion_pintor dap
+            INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+            WHERE a.proyecto_id = ? AND a.tipo = 'pintor' AND a.estado <> 'anulada'
         """, (pk,))
         pers_data = cursor.fetchone()
         total_personal = float(pers_data[0])
@@ -617,19 +623,21 @@ def generar_pdf_proyecto(pk):
         for sis in sistemas:
             sid = sis['id']
             cursor.execute("""
-                SELECT am.*, m.nombre as material_nombre,
-                       CONVERT(VARCHAR, am.fecha_registro, 103) as fecha_formateada
-                FROM asignacion_material am
-                INNER JOIN materiales m ON am.material_id = m.id
-                WHERE am.sistema_id = ?
+                SELECT g.descripcion, g.monto as costo_material,
+                       c.nombre as material_nombre,
+                       CONVERT(VARCHAR, g.fecha_gasto, 103) as fecha_formateada
+                FROM gastos g
+                INNER JOIN categorias_gasto c ON g.categoria_id = c.id
+                WHERE g.sistema_id = ?
             """, (sid,))
             materiales_por_sistema[sid] = [dict(zip([c[0] for c in cursor.description], r)) for r in cursor.fetchall()]
 
             cursor.execute("""
-                SELECT a.*, t.nombre as pintor_nombre
-                FROM asignacion_pintor a
-                INNER JOIN pintores t ON a.pintor_id = t.id
-                WHERE a.sistema_id = ?
+                SELECT dap.*, t.nombre as pintor_nombre
+                FROM detalle_asignacion_pintor dap
+                INNER JOIN asignaciones a ON dap.asignacion_id = a.id
+                INNER JOIN pintores t ON dap.pintor_id = t.id
+                WHERE a.sistema_id = ? AND a.tipo = 'pintor' AND a.estado <> 'anulada'
             """, (sid,))
             personal_por_sistema[sid] = [dict(zip([c[0] for c in cursor.description], r)) for r in cursor.fetchall()]
 

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Ajuste de Existencias - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/historial.png') }}" alt="Ajuste" class="icon-lg">
+        Ajuste de Existencias
+    </h1>
+    <p class="dashboard-subtitle">
+        Bodega: <strong>{{ bodega.nombre if bodega else 'Bodega interna' }}</strong>
+    </p>
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('inventario.listado_inventario') }}" class="btn btn-outline btn-icon-back">Volver al Inventario</a>
+    <a href="{{ url_for('inventario.movimientos_inventario') }}" class="btn btn-secondary btn-icon-history">Ver Movimientos</a>
+</div>
+
+<div class="card card-form-wide">
+    <div class="card-header">
+        <h2 class="card-title">Registrar Ajuste</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('inventario.ajuste_stock') }}">
+            <div class="form-grid">
+                <div class="div-form-group col-full">
+                    <label class="label-required">Registro de Inventario</label>
+                    <select class="input-text" name="producto_id" required>
+                        <option value="">-- Seleccione --</option>
+                        {% for p in productos %}
+                        <option value="{{ p.producto_id }}">
+                            {{ p.nombre }}{% if p.codigo %} ({{ p.codigo }}){% endif %}
+                            - Existencias: {{ "{:,.2f}".format(p.stock_disponible) }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Tipo de Movimiento</label>
+                    <select class="input-text" name="tipo_ajuste" required>
+                        <option value="">-- Seleccione --</option>
+                        <option value="entrada">Entrada</option>
+                        <option value="salida">Salida</option>
+                    </select>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Cantidad</label>
+                    <input class="input-text numeric-input" type="number" name="cantidad" step="0.0001" min="0.0001" required>
+                </div>
+
+                <div class="div-form-group col-full">
+                    <label class="label-required">Motivo</label>
+                    <input class="input-text" type="text" name="observacion" maxlength="500" placeholder="Inventario inicial, correccion de conteo, merma, devolucion interna..." required>
+                </div>
+            </div>
+
+            {% if not productos %}
+            <div class="empty-state-container">
+                <p>No hay registros activos para ajustar.</p>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-icon-save" {% if not productos %}disabled{% endif %}>
+                    Guardar Movimiento
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

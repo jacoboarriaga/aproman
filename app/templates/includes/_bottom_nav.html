@@ -1,7 +1,7 @@
 <nav class="bottom-nav">
+    {% set inventory_active = current_user.rol != 'agente' and ('inventario' in request.path or 'solicitudes' in request.path) %}
     {% set settings_active = current_user.rol != 'agente' and (
         ('pintores' in request.path and 'sistemas' not in request.path) or
-        ('materiales' in request.path and 'sistemas' not in request.path) or
         ('usuarios' in request.path and 'dashboard' not in request.path)
     ) %}
     <div class="bottom-nav-container">
@@ -22,12 +22,41 @@
         </a>
 
         {% if current_user.rol != 'agente' %}
+        <details class="bottom-nav-settings {{ 'is-open' if inventory_active }}">
+            <summary class="bottom-nav-item {{ 'active' if inventory_active }}">
+                <span class="bottom-nav-icon">
+                    <img src="{{ url_for('static', filename='img/icons/caja-alt.png') }}" alt="Inventario" class="icon-lg">
+                </span>
+                <span class="bottom-nav-label">Inventario</span>
+            </summary>
+
+            <div class="bottom-nav-settings-panel">
+                <a href="{{ url_for('inventario.listado_inventario') }}"
+                    class="bottom-nav-settings-link {{ 'active' if request.endpoint == 'inventario.listado_inventario' }}">
+                    <img src="{{ url_for('static', filename='img/icons/cajas.png') }}" class="icon-sm" alt="Existencias">
+                    <span>Existencias</span>
+                </a>
+                <a href="{{ url_for('inventario.movimientos_inventario') }}"
+                    class="bottom-nav-settings-link {{ 'active' if request.endpoint == 'inventario.movimientos_inventario' }}">
+                    <img src="{{ url_for('static', filename='img/icons/historial.png') }}" class="icon-sm" alt="Movimientos">
+                    <span>Movimientos</span>
+                </a>
+                <a href="{{ url_for('solicitudes.listado_solicitudes') }}"
+                    class="bottom-nav-settings-link {{ 'active' if 'solicitudes' in request.path }}">
+                    <img src="{{ url_for('static', filename='img/icons/comprobacion-del-portapapeles.png') }}" class="icon-sm" alt="Solicitudes">
+                    <span>Solicitudes</span>
+                </a>
+            </div>
+        </details>
+        {% endif %}
+
+        {% if current_user.rol != 'agente' %}
         <details class="bottom-nav-settings {{ 'is-open' if settings_active }}">
             <summary class="bottom-nav-item {{ 'active' if settings_active }}">
                 <span class="bottom-nav-icon">
-                    <img src="{{ url_for('static', filename='img/icons/ajustes.png') }}" alt="Ajustes" class="icon-lg bottom-nav-settings-icon">
+                    <img src="{{ url_for('static', filename='img/icons/ajustes-deslizadores.png') }}" alt="Administración" class="icon-lg bottom-nav-settings-icon">
                 </span>
-                <span class="bottom-nav-label">Ajustes</span>
+                <span class="bottom-nav-label">Administración</span>
             </summary>
 
             <div class="bottom-nav-settings-panel">
@@ -35,11 +64,6 @@
                     class="bottom-nav-settings-link {{ 'active' if 'pintores' in request.path and 'sistemas' not in request.path }}">
                     <img src="{{ url_for('static', filename='img/icons/seguridad-del-casco-del-usuario.png') }}" class="icon-sm" alt="Pintores">
                     <span>Pintores</span>
-                </a>
-                <a href="{{ url_for('materiales.listado_materiales') }}"
-                    class="bottom-nav-settings-link {{ 'active' if 'materiales' in request.path and 'sistemas' not in request.path }}">
-                    <img src="{{ url_for('static', filename='img/icons/tools.png') }}" class="icon-sm" alt="Materiales">
-                    <span>Materiales</span>
                 </a>
                 {% if current_user.username == 'sysadm' %}
                 <a href="{{ url_for('usuarios.listado_usuarios') }}"

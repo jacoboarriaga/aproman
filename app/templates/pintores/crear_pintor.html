@@ -10,11 +10,11 @@
     <p class="dashboard-subtitle">Anade un pintor al catalogo global para su posterior asignacion.</p>
 </div>
 
-<div style="margin-bottom: var(--espaciado-lg);">
-    <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-outline">Volver al Catalogo</a>
+<div class="page-actions">
+    <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-outline btn-icon-back">Volver a Pintores</a>
 </div>
 
-<div class="card card-form" style="max-width: 600px; margin: 0 auto;">
+<div class="card card-form">
     <div class="card-header">
         <h2 class="card-title">Datos del Pintor</h2>
     </div>
@@ -26,8 +26,7 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
-                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}" class="icon-sm mr-xs">
+                <button type="submit" class="btn btn-primary btn-icon-save">
                     Guardar Pintor
                 </button>
             </div>

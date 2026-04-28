@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}Movimientos - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/historial.png') }}" alt="Movimientos" class="icon-lg">
+        Movimientos
+    </h1>
+    <p class="dashboard-subtitle">Bitacora de entradas, asignaciones, consumos, devoluciones y ajustes.</p>
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('inventario.listado_inventario') }}" class="btn btn-outline btn-icon-back">Volver</a>
+    <a href="{{ url_for('inventario.ajuste_stock') }}" class="btn btn-primary btn-icon-edit">Ajuste de Existencias</a>
+</div>
+
+<div class="card">
+    <div class="card-body card-body-mobile-flat">
+        {% if movimientos %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Registro</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Bodega</th>
+                        <th>Proyecto</th>
+                        <th>Sistema</th>
+                        <th>Observacion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in movimientos %}
+                    <tr>
+                        <td>{{ m.fecha_formateada }}</td>
+                        <td><strong>{{ m.producto_nombre }}</strong></td>
+                        <td>
+                            <span class="badge badge-activo">
+                                {% if m.tipo == 'entrada' %}Entrada
+                                {% elif m.tipo == 'asignacion' %}Asignacion
+                                {% elif m.tipo == 'consumo' %}Consumo
+                                {% elif m.tipo == 'devolucion' %}Devolucion
+                                {% elif m.tipo == 'ajuste_entrada' %}Ajuste de entrada
+                                {% elif m.tipo == 'ajuste_salida' %}Ajuste de salida
+                                {% elif m.tipo == 'anulacion' %}Anulacion
+                                {% else %}{{ m.tipo }}{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ "{:,.2f}".format(m.cantidad) }} {{ m.unidad_medida }}</td>
+                        <td>{{ m.bodega_nombre or '---' }}</td>
+                        <td>{{ m.proyecto_codigo or '---' }}</td>
+                        <td>{{ m.sistema_nombre or '---' }}</td>
+                        <td>{{ m.observacion or '---' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mobile-card-view">
+            {% for m in movimientos %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <div class="mobile-card-title">{{ m.producto_nombre }}</div>
+                    <span class="badge badge-activo">
+                        {% if m.tipo == 'entrada' %}Entrada
+                        {% elif m.tipo == 'asignacion' %}Asignacion
+                        {% elif m.tipo == 'consumo' %}Consumo
+                        {% elif m.tipo == 'devolucion' %}Devolucion
+                        {% elif m.tipo == 'ajuste_entrada' %}Ajuste entrada
+                        {% elif m.tipo == 'ajuste_salida' %}Ajuste salida
+                        {% elif m.tipo == 'anulacion' %}Anulacion
+                        {% else %}{{ m.tipo }}{% endif %}
+                    </span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Fecha:</span>
+                        <span class="mobile-card-value">{{ m.fecha_formateada }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Cantidad:</span>
+                        <span class="mobile-card-value"><strong>{{ "{:,.2f}".format(m.cantidad) }} {{ m.unidad_medida }}</strong></span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Bodega:</span>
+                        <span class="mobile-card-value">{{ m.bodega_nombre or '---' }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Proyecto:</span>
+                        <span class="mobile-card-value">{{ m.proyecto_codigo or '---' }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Sistema:</span>
+                        <span class="mobile-card-value">{{ m.sistema_nombre or '---' }}</span>
+                    </div>
+                    <div class="mobile-card-row">
+                        <span class="mobile-card-label">Observacion:</span>
+                        <span class="mobile-card-value">{{ m.observacion or '---' }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-container">
+            <p>No hay movimientos registrados aun.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

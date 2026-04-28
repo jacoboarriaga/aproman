@@ -3,35 +3,34 @@
 
 {% block content %}
 <div class="dashboard-header">
-    <h1 class="dashboard-title" style="color: var(--color-error);">
+    <h1 class="dashboard-title text-danger">
         <img src="{{ url_for('static', filename='img/icons/eliminar-rojo.png') }}" alt="Eliminar" class="icon-lg icon-align-middle mr-sm">
         Eliminar Pintor
     </h1>
     <p class="dashboard-subtitle">Esta accion no se puede deshacer.</p>
 </div>
 
-<div style="margin-bottom: var(--espaciado-lg);">
-    <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-outline">Volver al Catalogo</a>
+<div class="page-actions">
+    <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-outline btn-icon-back">Volver a Pintores</a>
 </div>
 
-<div class="card card-form" style="max-width: 600px; border-left: 4px solid var(--color-error);">
-    <div class="card-header" style="background-color: #FEE2E2; border-bottom: 1px solid #fca5a5;">
-        <h2 class="card-title" style="color: var(--color-error);">Confirmar Eliminacion</h2>
+<div class="card card-form-sm danger-card">
+    <div class="card-header">
+        <h2 class="card-title">Confirmar Eliminacion</h2>
     </div>
     <div class="card-body">
-        <p style="font-size: 1.1rem; margin-bottom: var(--espaciado-md);">
+        <p class="text-lg mb-md">
             Estas seguro de que deseas eliminar a <strong>{{ pintor.nombre }}</strong> del catalogo general?
         </p>
-        <p style="font-size: 0.9rem; color: var(--color-texto-claro);">
+        <p class="text-sm text-gray-500">
             Nota: Si este pintor esta asignado a sistemas actuales, la base de datos podria bloquear
             la eliminacion para proteger la integridad financiera.
         </p>
 
         <form method="POST" action="{{ url_for('pintores.eliminar_pintor', id=pintor.id) }}">
             <div class="form-actions">
-                <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-error">
-                    <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" class="icon-sm mr-xs">
+                <a href="{{ url_for('pintores.listado_pintores') }}" class="btn btn-outline">Cancelar</a>
+                <button type="submit" class="btn btn-error btn-icon-delete">
                     Si, Eliminar
                 </button>
             </div>

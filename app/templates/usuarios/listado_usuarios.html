@@ -8,8 +8,10 @@
         <img src="{{ url_for('static', filename='img/icons/usuario.png') }}" alt="Usuarios" class="icon-lg">
         Gestion de Usuarios
     </h1>
-    <a href="{{ url_for('usuarios.crear_usuario') }}" class="btn btn-primary">
-        <img src="{{ url_for('static', filename='img/icons/agregar-blanco.png') }}" alt="Agregar" class="icon-sm">
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('usuarios.crear_usuario') }}" class="btn btn-primary btn-icon-add">
         Crear Usuario
     </a>
 </div>
@@ -30,7 +32,7 @@
                         <th>Proyectos</th>
                         <th>Costos</th>
                         <th>Estado</th>
-                        <th style="width: 220px;" class="text-center">Acciones</th>
+                        <th class="col-actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -58,8 +60,7 @@
                             {% endif %}
                         </td>
                         <td class="cell-actions">
-                            <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}" class="btn btn-secondary btn-small">
-                                <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                            <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}" class="btn btn-secondary btn-small btn-icon-edit">
                                 Editar
                             </a>
 
@@ -73,8 +74,7 @@
                             {% if u.total_proyectos == 0 %}
                             <form action="{{ url_for('usuarios.eliminar_usuario', id=u.id) }}" method="POST" class="inline-form"
                                 onsubmit="return confirm('Seguro que deseas eliminar definitivamente este usuario?');">
-                                <button type="submit" class="btn btn-error btn-small">
-                                    <img src="{{ url_for('static', filename='img/icons/eliminar-blanco.png') }}" alt="Eliminar" class="icon-sm">
+                                <button type="submit" class="btn btn-error btn-small btn-icon-delete">
                                     Eliminar
                                 </button>
                             </form>
@@ -125,8 +125,7 @@
                     </div>
                 </div>
                 <div class="mobile-card-actions">
-                    <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}" class="btn btn-secondary btn-small">
-                        <img src="{{ url_for('static', filename='img/icons/editar.png') }}" alt="Editar" class="icon-sm">
+                    <a href="{{ url_for('usuarios.editar_usuario', id=u.id) }}" class="btn btn-secondary btn-small btn-icon-edit">
                         Editar
                     </a>
 
@@ -140,7 +139,7 @@
                     {% if u.total_proyectos == 0 %}
                     <form action="{{ url_for('usuarios.eliminar_usuario', id=u.id) }}" method="POST" class="flex-full"
                         onsubmit="return confirm('Eliminar cuenta permanentemente?');">
-                        <button type="submit" class="btn btn-error btn-small w-100">Eliminar</button>
+                        <button type="submit" class="btn btn-error btn-small btn-icon-delete w-100">Eliminar</button>
                     </form>
                     {% endif %}
                     {% endif %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Nuevo Producto - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/agregar.png') }}" alt="Nuevo" class="icon-lg">
+        Nuevo Producto
+    </h1>
+    <p class="dashboard-subtitle">Registra un nuevo producto para control de existencias.</p>
+</div>
+
+<div class="mb-lg">
+    <a href="{{ url_for('inventario.listado_inventario') }}" class="btn btn-outline">Volver a Existencias</a>
+</div>
+
+<div class="card card-form">
+    <div class="card-header">
+        <h2 class="card-title">Datos del Producto</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('inventario.nuevo_producto') }}">
+            <div class="form-grid">
+                <div class="div-form-group">
+                    <label class="label-required">Codigo</label>
+                    <input class="input-text" type="text" name="codigo" maxlength="50" required placeholder="Ej. 0403000-01">
+                </div>
+                <div class="div-form-group col-full">
+                    <label class="label-required">Nombre del Producto</label>
+                    <input class="input-text" type="text" name="nombre" maxlength="250" required placeholder="Nombre descriptivo del producto">
+                </div>
+                <div class="div-form-group">
+                    <label>Cantidad Inicial</label>
+                    <input class="input-text numeric-input" type="number" name="cantidad_inicial" step="0.01" min="0" value="0">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-icon-save">
+                    Guardar Producto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

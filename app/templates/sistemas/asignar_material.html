@@ -1,151 +1,72 @@
 {% extends 'base.html' %}
-{% block title %}Asignar Material - AproMan{% endblock %}
+{% block title %}Asignar Inventario - AproMan{% endblock %}
 
 {% block content %}
 <div class="dashboard-header">
     <h1 class="dashboard-title">
-        <img src="{{ url_for('static', filename='img/icons/tools.png') }}" class="icon-lg mr-sm">
-        Asignar Material
+        <img src="{{ url_for('static', filename='img/icons/cajas.png') }}" class="icon-lg mr-sm" alt="Inventario">
+        Asignar {{ tipos_inventario[tipo_inventario].titulo }}
     </h1>
     <p class="dashboard-subtitle">
-        Al Sistema: <strong>{{ sistema.nombre }}</strong>
+        Sistema: <strong>{{ sistema.nombre }}</strong> &mdash; Bodega: <strong>{{ bodega.nombre }}</strong>
     </p>
 </div>
 
-<div style="margin-bottom: var(--espaciado-lg); display: flex; gap: var(--espaciado-sm); flex-wrap: wrap;">
-    <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-outline">
-        ← Volver al Sistema
+<div class="page-actions">
+    <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-outline btn-icon-back">
+        Volver al Sistema
+    </a>
+    <a href="{{ url_for('inventario.listado_inventario') }}" class="btn btn-secondary btn-icon-inventory">
+        Ver Inventario
     </a>
 </div>
 
-<div class="card card-form" style="max-width: 800px; margin: 0 auto;">
+<div class="card card-form-wide">
     <div class="card-body">
-        <form method="POST" action="{{ url_for('sistemas.asignar_material', sistema_id=sistema.id) }}">
-
+        <form method="POST" action="{{ url_for('sistemas.asignar_material', sistema_id=sistema.id, tipo=tipo_inventario) }}">
             <div class="form-grid">
-
-                <!-- Combobox Material -->
-                <div class="div-form-group" style="grid-column: 1 / -1;">
-                    <label class="label-required">Seleccione un Material del Catálogo *</label>
-                    <select class="input-text" name="material_id" required>
+                <div class="div-form-group col-full">
+                    <label class="label-required">Registro disponible</label>
+                    <select class="input-text" name="producto_id" required>
                         <option value="">-- Selecciona --</option>
-                        {% for m in catalogo_materiales %}
-                        <option value="{{ m.id }}">{{ m.nombre }}</option>
+                        {% for p in productos %}
+                        <option value="{{ p.id }}">
+                            {{ p.nombre }}{% if p.codigo %} ({{ p.codigo }}){% endif %}
+                            {% if p.categoria %} - {{ p.categoria }}{% endif %}
+                            - Disponible: {{ "{:,.2f}".format(p.stock_disponible) }} {{ p.unidad_medida }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <!-- Toggle ¿Genera costo? (solo visual, no se guarda en BD) -->
-                <div class="div-form-group" style="grid-column: 1 / -1;">
-                    <div style="
-                        display: flex;
-                        align-items: center;
-                        gap: 12px;
-                        padding: 12px 16px;
-                        border-radius: var(--radio-md, 8px);
-                    ">
-                        <!-- Switch toggle -->
-                        <label class="toggle-switch" style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0;">
-                            <input type="checkbox" id="genera_costo" name="genera_costo" value="1"
-                                   style="opacity:0; width:0; height:0;"
-                                   onchange="toggleCostoFields(this)">
-                            <span style="
-                                position:absolute; cursor:pointer; inset:0;
-                                background: #cbd5e1;
-                                border-radius: 24px;
-                                transition: background 0.25s;
-                            " id="toggle-track"></span>
-                            <span style="
-                                position:absolute; cursor:pointer;
-                                content:'';
-                                height:18px; width:18px;
-                                left:3px; top:3px;
-                                background: white;
-                                border-radius: 50%;
-                                transition: transform 0.25s;
-                                box-shadow: 0 1px 3px rgba(0,0,0,.2);
-                            " id="toggle-thumb"></span>
-                        </label>
-                        <label for="genera_costo" style="cursor:pointer; font-weight:600; margin:0; user-select:none;">
-                            ¿Genera costo?
-                        </label>
-                        <span id="toggle-badge" style="
-                            font-size: 0.75rem;
-                            padding: 2px 10px;
-                            border-radius: 99px;
-                            background: #e2e8f0;
-                            color: #64748b;
-                            font-weight: 600;
-                            transition: all 0.25s;
-                        ">No</span>
-                    </div>
+                <div class="div-form-group">
+                    <label class="label-required">Cantidad</label>
+                    <input class="input-text numeric-input" type="number" step="0.0001" min="0.0001" name="cantidad" required>
                 </div>
 
-                <!-- Campos de costo (ocultos por defecto) -->
-                <div id="campos-costo"
-                     style="display:none; grid-column: 1 / -1; grid-template-columns: 1fr 2fr; gap: var(--espaciado-md);">
-
-                    <!-- Costo del material -->
-                    <div class="div-form-group">
-                        <label class="label-required" for="costo_material">Costo del Material *</label>
-                        <input type="number" id="costo_material" name="costo_material"
-                               class="input-text" step="0.01" min="0" placeholder="0.00"
-                               style="text-align: right;">
-                    </div>
-
-                    <!-- Descripción del costo -->
-                    <div class="div-form-group">
-                        <label class="label-required" for="descripcion_costo">Descripción del Costo *</label>
-                        <input type="text" id="descripcion_costo" name="descripcion"
-                               class="input-text" maxlength="200"
-                               placeholder="Ej. Compra directa a proveedor">
-                    </div>
+                <div class="div-form-group col-full">
+                    <label>Observaciones</label>
+                    <input class="input-text" type="text" name="observaciones" maxlength="500" placeholder="Uso previsto, indicaciones o nota de entrega">
                 </div>
+            </div>
 
-            </div><!-- /form-grid -->
+            {% if not productos %}
+            <div class="empty-state-container">
+                <p><img src="{{ url_for('static', filename='img/icons/cajas.png') }}" alt="Inventario" class="empty-state-img"></p>
+                {% if registros_tipo %}
+                <p>Hay {{ tipos_inventario[tipo_inventario].titulo|lower }} registrados, pero sin existencias disponibles en esta bodega.</p>
+                {% else %}
+                <p>No hay {{ tipos_inventario[tipo_inventario].titulo|lower }} registrados para esta bodega.</p>
+                {% endif %}
+            </div>
+            {% endif %}
 
-            <div class="form-actions"
-                style="margin-top: var(--espaciado-lg); display: flex; justify-content: flex-end;">
-                <button type="submit" class="btn btn-primary">
-                    <img src="{{ url_for('static', filename='img/icons/disco-blanco.png') }}"
-                        class="icon-sm mr-xs">
-                    Asignar Material
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-icon-save" {% if not productos %}disabled{% endif %}>
+                    Asignar {{ tipos_inventario[tipo_inventario].titulo }}
                 </button>
             </div>
         </form>
     </div>
 </div>
-
-<script>
-    function toggleCostoFields(checkbox) {
-        var container  = document.getElementById('campos-costo');
-        var inputCosto = document.getElementById('costo_material');
-        var inputDesc  = document.getElementById('descripcion_costo');
-        var track      = document.getElementById('toggle-track');
-        var thumb      = document.getElementById('toggle-thumb');
-        var badge      = document.getElementById('toggle-badge');
-
-        if (checkbox.checked) {
-            container.style.display = 'grid';
-            inputCosto.required = true;
-            inputDesc.required  = true;
-            track.style.background = 'var(--color-primario, #4f46e5)';
-            thumb.style.transform  = 'translateX(20px)';
-            badge.style.background = '#e0e7ff';
-            badge.style.color      = '#4f46e5';
-            badge.textContent      = 'Sí';
-        } else {
-            container.style.display = 'none';
-            inputCosto.required = false;
-            inputDesc.required  = false;
-            inputCosto.value    = '';
-            inputDesc.value     = '';
-            track.style.background = '#cbd5e1';
-            thumb.style.transform  = 'translateX(0)';
-            badge.style.background = '#e2e8f0';
-            badge.style.color      = '#64748b';
-            badge.textContent      = 'No';
-        }
-    }
-</script>
 {% endblock %}

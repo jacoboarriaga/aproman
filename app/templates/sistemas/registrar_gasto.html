@@ -1,0 +1,60 @@
+﻿{% extends 'base.html' %}
+{% block title %}Registrar Gasto - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/dolar-de-saco.png') }}" class="icon-lg mr-sm" alt="Gasto">
+        Registrar Gasto Variable
+    </h1>
+    <p class="dashboard-subtitle">
+        Sistema: <strong>{{ sistema.nombre }}</strong>
+    </p>
+</div>
+
+<div class="page-actions">
+    <a href="{{ url_for('sistemas.ver_sistema', id=sistema.id) }}" class="btn btn-outline btn-icon-back">
+        Volver al Sistema
+    </a>
+</div>
+
+<div class="card card-form">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('sistemas.registrar_gasto', sistema_id=sistema.id) }}">
+            <div class="form-grid">
+                <div class="div-form-group">
+                    <label class="label-required">Categoria</label>
+                    <select class="input-text" name="categoria_id" required>
+                        <option value="">-- Selecciona --</option>
+                        {% for c in categorias %}
+                        <option value="{{ c.id }}">{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="div-form-group">
+                    <label class="label-required">Monto</label>
+                    <input class="input-text numeric-input" type="number" name="monto" step="0.01" min="0" required>
+                </div>
+
+                <div class="div-form-group">
+                    <label>Fecha</label>
+                    <input class="input-text" type="date" name="fecha_gasto">
+                </div>
+
+                <div class="div-form-group col-full">
+                    <label class="label-required">Descripcion</label>
+                    <input class="input-text" type="text" name="descripcion" maxlength="300" required placeholder="Ej. Almuerzo cuadrilla, combustible, transporte">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-icon-save">
+                    Guardar Gasto
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

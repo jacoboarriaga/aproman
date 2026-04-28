@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Registro de Inventario - AproMan{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1 class="dashboard-title">
+        <img src="{{ url_for('static', filename='img/icons/cajas.png') }}" alt="Inventario" class="icon-lg">
+        Registro de Inventario
+    </h1>
+    <p class="dashboard-subtitle">Productos, materiales, equipos, herramientas y consumibles.</p>
+</div>
+
+<div class="mb-lg">
+    <a href="{{ url_for('inventario.listado_inventario') }}" class="btn btn-outline">Volver al Inventario</a>
+    <a href="{{ url_for('inventario.ajuste_stock') }}" class="btn btn-secondary">Ajuste de Existencias</a>
+</div>
+
+
+
+{% if grupos_catalogo %}
+    {% for grupo in grupos_catalogo %}
+    <div class="card mb-lg">
+        <div class="card-header">
+            <h2 class="card-title">{{ grupo.titulo }}</h2>
+        </div>
+        <div class="card-body card-body-mobile-flat">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Codigo</th>
+                        <th>Existencia Min.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in grupo['items'] %}
+                    <tr>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td><code class="text-sm">{{ p.codigo }}</code></td>
+                        <td>{{ "{:,.2f}".format(p.stock_minimo) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="empty-state-container">
+    <p>No hay registros en el catalogo aun.</p>
+</div>
+{% endif %}
+{% endblock %}
